@@ -1,3 +1,4 @@
+const APP_VERSION="4.1";
 let db, pc=0, currentEdit=null, bulkPhotos=[];
 const $=id=>document.getElementById(id);
 
@@ -111,4 +112,68 @@ $("downloadZip").onclick=async()=>{
  $("bulkStatus").textContent=`${bulkPhotos.length}枚をZIP保存しました`;
 };
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{})}
+function setUpdateState(text){const el=$("updateState");if(el)el.textContent=text}
+(function initVersion(){
+ const v=$("appVersion");if(v)v.textContent=`v${APP_VERSION}`;
+ setUpdateState(navigator.onLine?"オンライン・最新版確認中":"オフライン表示");
+ window.addEventListener("online",()=>setUpdateState("オンライン"));
+ window.addEventListener("offline",()=>setUpdateState("オフライン表示"));
+})();
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register(`sw.js?v=${APP_VERSION}`).then(reg=>{
+   setUpdateState("最新版を読み込み済み");
+   reg.update().catch(()=>{});
+   reg.addEventListener("updatefound",()=>{setUpdateState("新しい版を確認中…")});
+ }).catch(()=>setUpdateState("通常表示"));
+ navigator.serviceWorker.addEventListener("controllerchange",()=>setUpdateState("更新完了・最新版"));
+}
+
+// ---- v4: mail template / PDF share ----
+let mailPdfFile=null;
+const RECIP_KEY="amiteru_mail_recipients_v1";
+function loadRecipients(){try{return JSON.parse(localStorage.getItem(RECIP_KEY)||"[]")}catch{return []}}
+function saveRecipients(v){localStorage.setItem(RECIP_KEY,JSON.stringify(v))}
+function fmtJPDate(v){if(!v)return "";const [y,m,d]=v.split("-").map(Number);return `${m}月${d}日`}
+function fillTemplate(s){return (s||"").replaceAll("{{納品日}}",fmtJPDate($("deliveryDate").value))}
+function renderRecipientSelect(selectName){
+ const rs=loadRecipients();$("recipientSelect").innerHTML='<option value="">送信先を選択</option>'+rs.map((r,i)=>`<option value="${i}">${r.name}</option>`).join("");
+ if(selectName){const idx=rs.findIndex(r=>r.name===selectName);if(idx>=0)$("recipientSelect").value=String(idx)}
+ applyRecipient();
+}
+function applyRecipient(){
+ const rs=loadRecipients(),idx=$("recipientSelect").value;
+ if(idx==="")return;
+ const r=rs[Number(idx)];if(!r)return;
+ $("mailTo").value=r.email||"";$("mailSubject").value=fillTemplate(r.subject);$("mailBody").value=fillTemplate(r.body);
+}
+function refreshTemplateText(){
+ const rs=loadRecipients(),idx=$("recipientSelect").value;
+ if(idx!==""){const r=rs[Number(idx)];if(r){$("mailSubject").value=fillTemplate(r.subject);$("mailBody").value=fillTemplate(r.body)}}
+}
+(function initMail(){
+ const t=new Date();t.setDate(t.getDate()+1);$("deliveryDate").value=t.toISOString().slice(0,10);
+ renderRecipientSelect();
+ $("recipientSelect").addEventListener("change",applyRecipient);$("deliveryDate").addEventListener("change",refreshTemplateText);
+ $("mailPdf").addEventListener("change",e=>{mailPdfFile=e.target.files[0]||null;$("pdfName").textContent=mailPdfFile?`${mailPdfFile.name} (${Math.round(mailPdfFile.size/1024)} KB)`:"未選択"});
+ $("saveRecipient").addEventListener("click",()=>{
+   const name=$("rName").value.trim(),email=$("rEmail").value.trim(),subject=$("rSubject").value,body=$("rBody").value;
+   if(!name||!email)return alert("送信先名とメールアドレスを入力してください。");
+   const rs=loadRecipients(),old=rs.findIndex(r=>r.name===name),obj={name,email,subject,body};if(old>=0)rs[old]=obj;else rs.push(obj);saveRecipients(rs);renderRecipientSelect(name);$("mailStatus").textContent=`「${name}」を保存しました。`;
+ });
+ $("deleteRecipient").addEventListener("click",()=>{
+   const idx=$("recipientSelect").value;if(idx==="")return alert("削除する送信先を選んでください。");
+   const rs=loadRecipients(),name=rs[Number(idx)]?.name||"";rs.splice(Number(idx),1);saveRecipients(rs);renderRecipientSelect();$("mailTo").value="";$("mailSubject").value="";$("mailBody").value="";$("mailStatus").textContent=`「${name}」を削除しました。`;
+ });
+ $("copyTo").addEventListener("click",async()=>{const to=$("mailTo").value.trim();if(!to)return alert("宛先がありません。");try{await navigator.clipboard.writeText(to);$("mailStatus").textContent="宛先をコピーしました。Gmailの宛先欄で長押し→ペーストしてください。"}catch{prompt("この宛先をコピーしてください",to)}});
+ $("shareMail").addEventListener("click",async()=>{
+   const to=$("mailTo").value.trim(),subject=$("mailSubject").value.trim(),body=$("mailBody").value;
+   if(!mailPdfFile)return alert("送り状PDFを選んでください。");if(!to)return alert("送信先を選ぶか、宛先を入力してください。");
+   try{await navigator.clipboard.writeText(to)}catch{}
+   const data={title:subject,text:body,files:[mailPdfFile]};
+   if(navigator.canShare && navigator.canShare({files:[mailPdfFile]}) && navigator.share){
+     try{await navigator.share(data);$("mailStatus").textContent="PDFと文章を共有しました。宛先はコピー済みです。Gmailの宛先欄へ貼り付けて、内容を確認して送信してください。";return}catch(e){if(e?.name==="AbortError")return}
+   }
+   const mailto=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;location.href=mailto;
+   $("mailStatus").textContent="メール画面を開きました。PDF添付は手動で追加してください。";
+ });
+})();
