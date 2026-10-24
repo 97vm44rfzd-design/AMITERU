@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#315b43">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="あみてる出荷">
+<link rel="manifest" href="manifest.webmanifest">
+<title>あみてる出荷画像</title>
+<style>
+:root{--g:#315b43;--bg:#f3f5f1;--line:#d8ded8;--muted:#687168}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:#202520}
+main{max-width:760px;margin:auto;padding:calc(18px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom))}
+h1{font-size:25px;margin:0}.sub,.small{color:var(--muted);font-size:12px;line-height:1.55}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0}
+h2{font-size:18px;margin:0 0 11px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,select,button,a{font:inherit}input[type=text],select{padding:11px;border:1px solid #c8cec8;border-radius:10px;background:#fff;min-width:0}
+button,.btn{border:0;border-radius:11px;padding:11px 14px;background:var(--g);color:#fff;font-weight:700;text-decoration:none;display:inline-block}.gray{background:#6b746d}.red{background:#9b4949}
+.lib{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}.v{border:1px solid var(--line);border-radius:11px;padding:7px}.v img{width:100%;height:115px;object-fit:cover;border-radius:8px}.v b{display:block;margin:5px 0}
+.product{border-top:1px solid var(--line);margin-top:13px;padding-top:13px}.product:first-child{border-top:0;margin-top:0;padding-top:0}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0}.slots select{width:100%}.preview{width:100%;border-radius:11px;margin-top:9px;background:#eee}.pill{display:inline-block;background:#e8eee9;border-radius:99px;padding:5px 9px;font-size:12px;margin:5px 0}
+</style></head>
+<body><main>
+<h1>あみてる出荷画像</h1>
+<div class="sub">iPhone用Webアプリ｜品種写真・現物写真はサーバーへ送信しません</div>
+
+<section class="card">
+<h2>① 品種写真を登録</h2>
+<div class="row">
+<input id="vname" type="text" placeholder="例：パルブラ" style="flex:1">
+<label class="btn">写真を選ぶ<input id="vfile" type="file" accept="image/*" hidden></label>
+<button id="saveV">登録</button>
+</div>
+<div class="small">初回だけ登録。次回もこのiPhoneに残ります。</div>
+<div id="library" class="lib"></div>
+</section>
+
+<section class="card">
+<h2>② ミックス画像</h2>
+<div id="products"></div>
+<div class="row" style="margin-top:12px"><button id="addP">＋ 商品追加</button></div>
+<div class="small">3品種＝縦3分割、4品種＝2×2。完成画像を長押しして「写真に保存」。</div>
+</section>
+
+<section class="card">
+<h2>③ 現物写真を自動縮小</h2>
+<label class="btn">現物写真を選ぶ<input id="realfile" type="file" accept="image/*" hidden></label>
+<div id="realout"></div>
+<div class="small">長辺1600px以内・JPEG品質82%に自動変換。</div>
+</section>
+
+<section class="card">
+<h2>④ ホーム画面に追加</h2>
+<div class="small">Safariの共有ボタン →「ホーム画面に追加」。以後は「あみてる出荷」アイコンから起動できます。</div>
+</section>
+<canvas id="cv" hidden></canvas>
+<script src="app.js"></script>
+</main></body></html>
