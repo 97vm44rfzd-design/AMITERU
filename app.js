@@ -8,13 +8,14 @@ function b64(s){return btoa(unescape(encodeURIComponent(s))).replace(/=/g,"")}
 const req=indexedDB.open("amiteru_shipping_v1",2);
 req.onupgradeneeded=e=>{
   const d=e.target.result;
-  if(!d.objectStoreNames.contains("varieties")) d.createObjectStore("varieties",{keyPath:"id",autoIncrement:true});
+  // 初期版からの互換性を優先。varieties は keyPath:"name" をそのまま使う。
+  if(!d.objectStoreNames.contains("varieties")) d.createObjectStore("varieties",{keyPath:"name"});
 };
 req.onsuccess=e=>{db=e.target.result;renderLibrary()};
 function store(mode="readonly"){return db.transaction("varieties",mode).objectStore("varieties")}
 function allV(){return new Promise((res,rej)=>{let r=store().getAll();r.onsuccess=()=>res(r.result);r.onerror=rej})}
 function putV(v){return new Promise((res,rej)=>{let r=store("readwrite").put(v);r.onsuccess=()=>res(r.result);r.onerror=rej})}
-function delV(id){return new Promise((res,rej)=>{let r=store("readwrite").delete(id);r.onsuccess=()=>res();r.onerror=rej})}
+function delV(name){return new Promise((res,rej)=>{let r=store("readwrite").delete(name);r.onsuccess=()=>res();r.onerror=rej})}
 
 function fileToJpeg(file,max=1200,q=.82){
  return new Promise((res,rej)=>{
@@ -37,9 +38,9 @@ $("saveVariety").onclick=async()=>{
 };
 async function renderLibrary(){
  const vs=await allV();
- $("library").innerHTML=vs.map(v=>`<div class="v"><img src="${v.url}"><b>${esc(v.name)}</b><div>${(v.aliases||[]).map(a=>`<span class="chip">${esc(a)}</span>`).join("")}</div><button class="red" onclick="removeV(${v.id})">削除</button></div>`).join("");
+ $("library").innerHTML=vs.map(v=>`<div class="v"><img src="${v.url}"><b>${esc(v.name)}</b><div>${(v.aliases||[]).map(a=>`<span class="chip">${esc(a)}</span>`).join("")}</div><button class="red" onclick='removeV(${JSON.stringify(v.name)})'>削除</button></div>`).join("");
 }
-window.removeV=async id=>{await delV(id);renderLibrary()};
+window.removeV=async name=>{await delV(name);renderLibrary()};
 
 function parseCSV(t){
  let rows=[],row=[],cell="",q=false;
@@ -85,7 +86,7 @@ $("parseCsv").onclick=async()=>{
  for(const r of mat.slice(1)){
   if(norm(r[ci])!=norm("ユーカリ"))continue;
   let text=(cd>=0?r[cd]:"")||(cv>=0?r[cv]:""), ts=toks(text), matches=[], miss=[];
-  for(const t of ts){let v=map.get(norm(t)); if(v){if(!matches.some(x=>x.id==v.id))matches.push(v)}else{miss.push(t);if(!unresolved.includes(t))unresolved.push(t)}}
+  for(const t of ts){let v=map.get(norm(t)); if(v){if(!matches.some(x=>norm(x.name)==norm(v.name)))matches.push(v)}else{miss.push(t);if(!unresolved.includes(t))unresolved.push(t)}}
   products.push({seq:seq++,text,length:cl>=0?r[cl]:"",box:cb>=0?r[cb]:"",matches,miss,url:""});
  }
  $("csvStatus").textContent=`ユーカリ ${products.length}商品 / 未一致 ${unresolved.length}件`;
@@ -94,14 +95,27 @@ $("parseCsv").onclick=async()=>{
 
 async function renderUnmatched(){
  if(!unresolved.length){$("unmatchedArea").style.display="none";return}
- const vs=await allV(), opts='<option value="">画像を選択</option>'+vs.map(v=>`<option value="${v.id}">${esc(v.name)}</option>`).join("");
+ const vs=await allV(), opts='<option value="">画像を選択</option>'+vs.map(v=>`<option value="${encodeURIComponent(v.name)}">${esc(v.name)}</option>`).join("");
  $("unmatchedArea").style.display="block";
  $("unmatchedList").innerHTML=unresolved.map(t=>`<div class="product"><b>${esc(t)}</b><div class="row" style="margin-top:7px"><select id="map_${b64(t)}" style="flex:1">${opts}</select><label class="small"><input id="save_${b64(t)}" type="checkbox"> 別名として保存</label></div></div>`).join("");
 }
 $("applyUnmatched").onclick=async()=>{
- const vs=await allV(), by=new Map(vs.map(v=>[String(v.id),v])), mp=new Map();
- for(const t of unresolved){let k=b64(t),id=$("map_"+k).value;if(id){let v=by.get(String(id));mp.set(t,v);if($("save_"+k).checked){v.aliases=[...new Set([...(v.aliases||[]),t])];await putV(v)}}}
- for(const p of products){let left=[];for(const t of p.miss){let v=mp.get(t);if(v){if(!p.matches.some(x=>x.id==v.id))p.matches.push(v)}else left.push(t)}p.miss=left}
+ const vs=await allV(), by=new Map(vs.map(v=>[norm(v.name),v])), mp=new Map();
+ for(const t of unresolved){
+   let k=b64(t), val=$("map_"+k).value;
+   if(val){
+     let selectedName=decodeURIComponent(val);
+     let v=by.get(norm(selectedName));
+     if(v){
+       mp.set(t,v);
+       if($("save_"+k).checked){
+         v.aliases=[...new Set([...(v.aliases||[]),t])];
+         await putV(v);
+       }
+     }
+   }
+ }
+ for(const p of products){let left=[];for(const t of p.miss){let v=mp.get(t);if(v){if(!p.matches.some(x=>norm(x.name)==norm(v.name)))p.matches.push(v)}else left.push(t)}p.miss=left}
  unresolved=[...new Set(products.flatMap(p=>p.miss))];
  $("csvStatus").textContent=`ユーカリ ${products.length}商品 / 未一致 ${unresolved.length}件`;
  renderLibrary();renderUnmatched();renderProducts();
@@ -109,7 +123,7 @@ $("applyUnmatched").onclick=async()=>{
 function renderProducts(){
  if(!products.length){$("productsArea").style.display="none";return}
  $("productsArea").style.display="block";
- $("productsList").innerHTML=products.map(p=>`<div class="product"><div><b>${String(p.seq).padStart(2,"0")}</b> ${p.length?`<span class="chip">${esc(p.length)}</span>`:""} ${p.miss.length?`<span class="warn">未一致 ${p.miss.length}</span>`:`<span class="chip">照合OK</span>`}</div><div class="small">${esc(p.text)}</div><div>${p.matches.map(v=>`<span class="chip">${esc(v.name)}</span>`).join("")}${p.miss.map(t=>`<span class="warn">${esc(t)}</span>`).join("")}</div><div class="small">${String(p.seq).padStart(2,"0")}_mix.jpg</div>${p.url?`<img class="preview" src="${p.url}"><div><a class="btn" download="${String(p.seq).padStart(2,"0")}_mix.jpg" href="${p.url}">画像を保存</a></div>`:""}</div>`).join("");
+ $("productsList").innerHTML=products.map(p=>`<div class="product"><div><b>${String(p.seq).padStart(2,"0")}</b> ${p.length?`<span class="chip">${esc(p.length)}</span>`:""} ${p.miss.length?`<span class="warn">未一致 ${p.miss.length}</span>`:(p.matches.length>=3&&p.matches.length<=5?`<span class="chip">照合OK</span>`:`<span class="warn">画像不足 ${p.matches.length}枚</span>`)}</div><div class="small">${esc(p.text)}</div><div>${p.matches.map(v=>`<span class="chip">${esc(v.name)}</span>`).join("")}${p.miss.map(t=>`<span class="warn">${esc(t)}</span>`).join("")}</div><div class="small">${String(p.seq).padStart(2,"0")}_mix.jpg</div>${p.url?`<img class="preview" src="${p.url}"><div><a class="btn" download="${String(p.seq).padStart(2,"0")}_mix.jpg" href="${p.url}">画像を保存</a></div>`:""}</div>`).join("");
 }
 function roundPath(ctx,x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
 function cover(ctx,img,x,y,w,h){let sc=Math.max(w/img.width,h/img.height),nw=img.width*sc,nh=img.height*sc;ctx.drawImage(img,x+(w-nw)/2,y+(h-nh)/2,nw,nh)}
@@ -154,4 +168,4 @@ $("shareMail").onclick=async()=>{
 };
 $("saleDate").value=todayJP();loadMail();applyMail();
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js?v=45").catch(()=>{})}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js?v=46").catch(()=>{})}
