@@ -4,117 +4,116 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#315b43">
-<title>あみてる出荷画像 v4.3</title>
+<link rel="manifest" href="manifest.webmanifest">
+<title>あみてる出荷画像 v4.4</title>
 <style>
-:root{--g:#315b43;--bg:#f3f5f1;--line:#d8ded8;--muted:#687168;--red:#b04a4a}
+:root{--g:#315b43;--bg:#f4f6f2;--line:#d6ddd6;--muted:#697169;--red:#a64b4b}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:#202520}
-main{max-width:880px;margin:auto;padding:16px}
-h1{font-size:28px;margin:0 0 4px}
-.version{display:inline-block;background:#e7efe9;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;margin-bottom:8px}
-.sub,.small{color:var(--muted);font-size:12px;line-height:1.6}
-.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
-h2{font-size:18px;margin:0 0 12px}
-h3{font-size:16px;margin:14px 0 10px}
+main{max-width:860px;margin:auto;padding:16px}
+h1{margin:0;font-size:27px}
+.top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 12px}
+.badge{background:var(--g);color:white;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700}
+.state{background:#e8efe9;border-radius:999px;padding:5px 10px;font-size:12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0}
+h2{font-size:18px;margin:0 0 12px} h3{font-size:15px;margin:14px 0 8px}
+.small{font-size:12px;color:var(--muted);line-height:1.6}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-input,select,button,a,textarea{font:inherit}
-input[type=text],select,textarea{padding:10px;border:1px solid #c8cec8;border-radius:10px;background:#fff;min-width:0}
-button,.btn{border:0;border-radius:11px;padding:10px 14px;background:var(--g);color:#fff;font-weight:700;text-decoration:none;display:inline-block;cursor:pointer}
-.gray{background:#6d756f}
-.red{background:var(--red)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media (max-width:700px){.grid2{grid-template-columns:1fr}}
-.lib{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
-.v{border:1px solid var(--line);border-radius:12px;padding:8px}
-.v img{width:100%;height:120px;object-fit:cover;border-radius:8px;background:#eee}
-.v b{display:block;margin-top:6px}
-.chip{display:inline-block;background:#eef3ee;border-radius:999px;padding:4px 8px;font-size:11px;margin:2px}
-.warn{display:inline-block;background:#fff1f1;color:#8e3838;border:1px solid #f0c5c5;border-radius:999px;padding:4px 8px;font-size:11px;margin:2px}
-.product{border:1px solid var(--line);border-radius:12px;padding:10px;margin:10px 0}
-.preview{width:100%;max-width:420px;border-radius:10px;border:1px solid #ddd;background:#f6f6f6}
-.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
-.note{background:#f7faf7;border-radius:10px;padding:8px;margin-top:8px}
+@media(max-width:720px){.grid2{grid-template-columns:1fr}}
+input,select,textarea,button,a{font:inherit}
+input[type=text],input[type=email],input[type=date],select,textarea{width:100%;padding:10px;border:1px solid #c9d0c9;border-radius:10px;background:#fff}
+textarea{min-height:105px}
+button,.btn{border:0;border-radius:11px;padding:10px 14px;background:var(--g);color:#fff;font-weight:700;text-decoration:none;display:inline-block;cursor:pointer}
+.light{background:#e8efe9;color:#294331}.gray{background:#6f776f}.red{background:var(--red)}
+.field{margin:9px 0}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:4px}
+.lib{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.v{border:1px solid var(--line);border-radius:12px;padding:8px}.v img{width:100%;height:120px;object-fit:cover;border-radius:8px}
+.chip{display:inline-block;background:#edf3ee;border-radius:999px;padding:4px 8px;font-size:11px;margin:2px}
+.warn{display:inline-block;background:#fff0f0;color:#8f3737;border:1px solid #efc8c8;border-radius:999px;padding:4px 8px;font-size:11px;margin:2px}
+.product{border:1px solid var(--line);border-radius:12px;padding:10px;margin:9px 0}
+.preview{width:100%;max-width:420px;border-radius:10px;border:1px solid #ddd}
+.note{background:#f7faf7;border-radius:10px;padding:9px}
 hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 </style>
 </head>
 <body>
 <main>
-  <div class="version">v4.3</div>
-  <h1>あみてる出荷画像</h1>
-  <div class="sub">CSV読込 → ユーカリ商品自動判定 → ミックス画像自動生成。未一致品種は手動で差し込めて、別名として保存できます。</div>
+<h1>あみてる出荷画像</h1>
+<div class="top">
+  <span class="badge">v4.4</span>
+  <span class="state" id="state">最新版</span>
+</div>
+<div class="small">メール定型を保持しつつ、CSVからユーカリ画像を自動生成します。</div>
 
-  <section class="card">
-    <h2>1. 品種画像ライブラリ</h2>
-    <div class="grid2">
-      <div>
-        <div class="row">
-          <input id="vname" type="text" placeholder="正式名 例：ゴニオカリックス" style="flex:1">
-          <label class="btn">写真を選ぶ<input id="vfile" type="file" accept="image/*" hidden></label>
-        </div>
-        <div style="margin-top:8px">
-          <input id="valiases" type="text" placeholder="別名（カンマ区切り）例：ゴニオ, goniocalyx" style="width:100%">
-        </div>
-        <div class="row" style="margin-top:8px">
-          <button id="saveVariety">登録</button>
-        </div>
-        <div class="small">CSV内の品種名が正式名と一致しなくても、別名で照合できます。</div>
-      </div>
-      <div>
-        <div class="note small">
-          例：<br>
-          正式名：ゴニオカリックス<br>
-          別名：ゴニオ<br><br>
-          正式名：シネレア<br>
-          別名：銀世界
-        </div>
-      </div>
-    </div>
-    <div id="library" class="lib" style="margin-top:12px"></div>
-  </section>
-
-  <section class="card">
-    <h2>2. 送り状CSVを読む</h2>
+<section class="card">
+<h2>1. 品種画像ライブラリ</h2>
+<div class="grid2">
+  <div>
+    <div class="field"><label>正式名</label><input id="vname" type="text" placeholder="例：ゴニオカリックス"></div>
+    <div class="field"><label>別名（カンマ区切り）</label><input id="valiases" type="text" placeholder="例：ゴニオ"></div>
     <div class="row">
-      <label class="btn">CSVを選ぶ<input id="csvFile" type="file" accept=".csv,text/csv" hidden></label>
-      <button id="parseCsv">CSV読込</button>
+      <label class="btn">写真を選ぶ<input id="vfile" type="file" accept="image/*" hidden></label>
+      <button id="saveVariety">登録</button>
     </div>
-    <div id="csvStatus" class="small" style="margin-top:8px">まだ読み込んでいません。</div>
+  </div>
+  <div class="note small">CSVの詳細欄と正式名・別名で照合します。不一致は後から手動で差し込めます。</div>
+</div>
+<div id="library" class="lib" style="margin-top:12px"></div>
+</section>
 
-    <div id="csvSummary" style="margin-top:12px"></div>
+<section class="card">
+<h2>2. 送り状CSV → ミックス画像</h2>
+<div class="row">
+  <label class="btn">CSVを選ぶ<input id="csvFile" type="file" accept=".csv,text/csv" hidden></label>
+  <button id="parseCsv">CSV読込</button>
+</div>
+<div id="csvStatus" class="small" style="margin-top:8px">未読込</div>
 
-    <div id="unmatchedArea" style="display:none;margin-top:14px">
-      <h3>未一致品種の差し込み</h3>
-      <div class="small">一致しなかった名前ごとに、使う画像を選べます。必要なら「別名として保存」をONにしてください。</div>
-      <div id="unmatchedList" style="margin-top:10px"></div>
-      <div class="row" style="margin-top:10px">
-        <button id="applyUnmatched">未一致を反映</button>
-      </div>
-    </div>
+<div id="unmatchedArea" style="display:none">
+  <h3>未一致品種</h3>
+  <div class="small">使う登録画像を選び、「別名として保存」をONにすると次回から自動一致します。</div>
+  <div id="unmatchedList"></div>
+  <button id="applyUnmatched">未一致を反映</button>
+</div>
 
-    <div id="productsArea" style="display:none;margin-top:14px">
-      <h3>ユーカリ商品</h3>
-      <div class="small">ユーカリだけを自動抽出しています。コットンやグラスジェムコーン等はこの機能では無視します。</div>
-      <div class="row" style="margin-top:10px">
-        <button id="generateAllMix">ミックス画像を一括生成</button>
-      </div>
-      <div id="productsList" style="margin-top:10px"></div>
-    </div>
-  </section>
+<div id="productsArea" style="display:none">
+  <h3>ユーカリ商品</h3>
+  <div class="row"><button id="generateAllMix">ミックス画像を一括生成</button></div>
+  <div id="productsList"></div>
+</div>
+</section>
 
-  <section class="card">
-    <h2>3. この版でできること</h2>
-    <div class="small">
-      ・CSVの詳細欄から品種名を抽出<br>
-      ・品目が「ユーカリ」の行だけ対象<br>
-      ・登録済み画像から自動照合<br>
-      ・未一致の品種は手動で差し込み<br>
-      ・必要なら別名として保存して次回から自動一致<br>
-      ・3品種＝縦3分割 / 4品種＝2×2 / 5品種＝上3枚＋下2枚
-    </div>
-  </section>
+<section class="card">
+<h2>3. 送り状メール</h2>
+<div class="small">ここで登録した送信先・件名・本文は端末に保存され、次回も残ります。</div>
 
-  <canvas id="cv" hidden></canvas>
-  <script src="app.js"></script>
+<div class="field"><label>送信先名</label><input id="mailName" type="text" placeholder="例：オークネット"></div>
+<div class="field"><label>メールアドレス</label><input id="mailTo" type="email" placeholder="example@example.com"></div>
+<div class="field"><label>件名テンプレート</label><input id="mailSubjectTpl" type="text" placeholder="{{セリ日}}セリ分 送り状"></div>
+<div class="field"><label>本文テンプレート</label><textarea id="mailBodyTpl" placeholder="いつもお世話になっております。&#10;{{セリ日}}セリ分の送り状を添付いたします。&#10;よろしくお願いいたします。"></textarea></div>
+<div class="row">
+  <button id="saveMailTemplate">定型文を保存</button>
+  <button class="light" id="loadMailTemplate">保存済みを呼び出す</button>
+</div>
+
+<hr>
+
+<div class="field"><label>セリ日</label><input id="saleDate" type="date"></div>
+<div class="field"><label>送り状PDF</label><input id="pdfFile" type="file" accept="application/pdf"></div>
+<div class="field"><label>完成件名</label><input id="mailSubject" type="text"></div>
+<div class="field"><label>完成本文</label><textarea id="mailBody"></textarea></div>
+<div class="field"><label>宛先</label><input id="mailToPreview" type="email"></div>
+<div class="row">
+  <button id="refreshMail">定型文を反映</button>
+  <button id="shareMail">PDF＋文章を共有</button>
+  <button class="light" id="copyTo">宛先をコピー</button>
+</div>
+<div class="small" style="margin-top:8px">iPhoneでは共有画面からGmailを選びます。送信ボタンだけ最後に自分で押す方式です。</div>
+</section>
+
+<canvas id="cv" hidden></canvas>
+<script src="app.js?v=44"></script>
 </main>
 </body>
 </html>
