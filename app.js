@@ -137,6 +137,39 @@ $("generateAllMix").onclick=async()=>{
  renderProducts();
 };
 
+async function dataUrlToFile(dataUrl,name){
+  const res=await fetch(dataUrl);
+  const blob=await res.blob();
+  return new File([blob],name,{type:"image/jpeg"});
+}
+
+$("shareAllMix").onclick=async()=>{
+  const made=products.filter(p=>p.url);
+  if(!made.length){
+    alert("先にミックス画像を一括生成してください。");
+    return;
+  }
+  const files=[];
+  for(const p of made){
+    files.push(await dataUrlToFile(p.url,`${String(p.seq).padStart(2,"0")}_mix.jpg`));
+  }
+  try{
+    if(navigator.canShare && navigator.canShare({files})){
+      await navigator.share({
+        title:"あみてる ミックス画像",
+        text:`ミックス画像 ${files.length}枚`,
+        files
+      });
+    }else{
+      alert("このブラウザでは複数画像の共有に対応していません。Safariで開いてください。");
+    }
+  }catch(e){
+    if(e && e.name!=="AbortError"){
+      alert("一括共有できませんでした。画像枚数を減らすかSafariで試してください。");
+    }
+  }
+};
+
 const MAILKEY="amiteru_mail_template_v44";
 function todayJP(){let d=new Date(),parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Tokyo",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(d);let o={};for(const p of parts)o[p.type]=p.value;return `${o.year}-${o.month}-${o.day}`}
 function displayDate(v){if(!v)return "";let [y,m,d]=v.split("-");return `${Number(m)}月${Number(d)}日`}
@@ -168,4 +201,4 @@ $("shareMail").onclick=async()=>{
 };
 $("saleDate").value=todayJP();loadMail();applyMail();
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js?v=46").catch(()=>{})}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js?v=47").catch(()=>{})}
