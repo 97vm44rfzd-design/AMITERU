@@ -2,61 +2,119 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#315b43">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="あみてる出荷">
-<link rel="manifest" href="manifest.webmanifest">
-<title>あみてる出荷画像 v4.1</title>
+<title>あみてる出荷画像 v4.3</title>
 <style>
-:root{--g:#315b43;--bg:#f3f5f1;--line:#d8ded8;--muted:#687168}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:#202520}
-main{max-width:760px;margin:auto;padding:calc(18px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom))}
-h1{font-size:25px;margin:0}.sub,.small{color:var(--muted);font-size:12px;line-height:1.55}.versionBar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:7px 0 2px}.versionBadge,.updateBadge{display:inline-block;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:700}.versionBadge{background:#315b43;color:#fff}.updateBadge{background:#e8eee9;color:#294331}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0}
-h2{font-size:18px;margin:0 0 11px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}input,select,textarea,button,a{font:inherit}
-input[type=text],input[type=email],input[type=date],select,textarea{padding:11px;border:1px solid #c8cec8;border-radius:10px;background:#fff;min-width:0;width:100%}textarea{min-height:115px;resize:vertical}
-button,.btn{border:0;border-radius:11px;padding:11px 14px;background:var(--g);color:#fff;font-weight:700;text-decoration:none;display:inline-block}.red{background:#9b4949}.gray{background:#6b746d}.light{background:#e8eee9;color:#294331}
-.field{margin:9px 0}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:4px}.lib{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
-.v{border:1px solid var(--line);border-radius:11px;padding:7px}.v img{width:100%;height:115px;object-fit:cover;border-radius:8px}.v b{display:block;margin:5px 0}.product{border-top:1px solid var(--line);margin-top:13px;padding-top:13px}.product:first-child{border-top:0;margin-top:0;padding-top:0}
-.slots{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0}.slots select{width:100%}.preview{width:100%;border-radius:11px;margin-top:9px;background:#eee}.pill{display:inline-block;background:#e8eee9;border-radius:99px;padding:5px 9px;font-size:12px;margin:5px 0}
-#editorBackdrop{position:fixed;inset:0;background:#000b;display:none;z-index:1000;padding:12px;overflow:auto}#editorBox{max-width:620px;margin:10px auto;background:white;border-radius:16px;padding:12px}#editorCanvas{position:relative;width:100%;aspect-ratio:1250/1532;background:white;overflow:hidden;border-radius:10px}
-.editTile{position:absolute;overflow:hidden;background:#eee;touch-action:none}.editTile img{position:absolute;width:100%;height:100%;object-fit:cover;left:0;top:0;transform-origin:center center;user-select:none;-webkit-user-drag:none;pointer-events:none}.editHint{font-size:12px;color:#666;margin:8px 0}.photoGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}.photoGrid img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px}
-.recipient{border:1px solid var(--line);border-radius:11px;padding:10px;margin-top:8px}.status{margin-top:8px;padding:9px;border-radius:9px;background:#f3f6f3;font-size:12px;white-space:pre-wrap}.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}@media(max-width:520px){.two{grid-template-columns:1fr}}
+:root{--g:#315b43;--bg:#f3f5f1;--line:#d8ded8;--muted:#687168;--red:#b04a4a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:#202520}
+main{max-width:880px;margin:auto;padding:16px}
+h1{font-size:28px;margin:0 0 4px}
+.version{display:inline-block;background:#e7efe9;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;margin-bottom:8px}
+.sub,.small{color:var(--muted);font-size:12px;line-height:1.6}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+h2{font-size:18px;margin:0 0 12px}
+h3{font-size:16px;margin:14px 0 10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,select,button,a,textarea{font:inherit}
+input[type=text],select,textarea{padding:10px;border:1px solid #c8cec8;border-radius:10px;background:#fff;min-width:0}
+button,.btn{border:0;border-radius:11px;padding:10px 14px;background:var(--g);color:#fff;font-weight:700;text-decoration:none;display:inline-block;cursor:pointer}
+.gray{background:#6d756f}
+.red{background:var(--red)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:700px){.grid2{grid-template-columns:1fr}}
+.lib{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.v{border:1px solid var(--line);border-radius:12px;padding:8px}
+.v img{width:100%;height:120px;object-fit:cover;border-radius:8px;background:#eee}
+.v b{display:block;margin-top:6px}
+.chip{display:inline-block;background:#eef3ee;border-radius:999px;padding:4px 8px;font-size:11px;margin:2px}
+.warn{display:inline-block;background:#fff1f1;color:#8e3838;border:1px solid #f0c5c5;border-radius:999px;padding:4px 8px;font-size:11px;margin:2px}
+.product{border:1px solid var(--line);border-radius:12px;padding:10px;margin:10px 0}
+.preview{width:100%;max-width:420px;border-radius:10px;border:1px solid #ddd;background:#f6f6f6}
+.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.note{background:#f7faf7;border-radius:10px;padding:8px;margin-top:8px}
+hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 </style>
 </head>
-<body><main>
-<h1>あみてる出荷画像</h1>
-<div class="versionBar"><span class="versionBadge" id="appVersion">v4.1</span><span class="updateBadge" id="updateState">更新状態を確認中…</span></div>
-<div class="sub">iPhone用Webアプリ｜写真・送り状PDFは端末内で処理します</div>
+<body>
+<main>
+  <div class="version">v4.3</div>
+  <h1>あみてる出荷画像</h1>
+  <div class="sub">CSV読込 → ユーカリ商品自動判定 → ミックス画像自動生成。未一致品種は手動で差し込めて、別名として保存できます。</div>
 
-<section class="card"><h2>① 品種写真を登録</h2><div class="row"><input id="vname" type="text" placeholder="例：パルブラ" style="flex:1"><label class="btn">写真を選ぶ<input id="vfile" type="file" accept="image/*" hidden></label><button id="saveV">登録</button></div><div class="small">初回だけ登録。次回もこのiPhoneに残ります。</div><div id="library" class="lib"></div></section>
+  <section class="card">
+    <h2>1. 品種画像ライブラリ</h2>
+    <div class="grid2">
+      <div>
+        <div class="row">
+          <input id="vname" type="text" placeholder="正式名 例：ゴニオカリックス" style="flex:1">
+          <label class="btn">写真を選ぶ<input id="vfile" type="file" accept="image/*" hidden></label>
+        </div>
+        <div style="margin-top:8px">
+          <input id="valiases" type="text" placeholder="別名（カンマ区切り）例：ゴニオ, goniocalyx" style="width:100%">
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button id="saveVariety">登録</button>
+        </div>
+        <div class="small">CSV内の品種名が正式名と一致しなくても、別名で照合できます。</div>
+      </div>
+      <div>
+        <div class="note small">
+          例：<br>
+          正式名：ゴニオカリックス<br>
+          別名：ゴニオ<br><br>
+          正式名：シネレア<br>
+          別名：銀世界
+        </div>
+      </div>
+    </div>
+    <div id="library" class="lib" style="margin-top:12px"></div>
+  </section>
 
-<section class="card"><h2>② ミックス画像</h2><div id="products"></div><div class="row" style="margin-top:12px"><button id="addP">＋ 商品追加</button></div><div class="small">3〜5品種対応。各画像をドラッグ・ピンチして使う位置を調整できます。</div></section>
+  <section class="card">
+    <h2>2. 送り状CSVを読む</h2>
+    <div class="row">
+      <label class="btn">CSVを選ぶ<input id="csvFile" type="file" accept=".csv,text/csv" hidden></label>
+      <button id="parseCsv">CSV読込</button>
+    </div>
+    <div id="csvStatus" class="small" style="margin-top:8px">まだ読み込んでいません。</div>
 
-<section class="card"><h2>③ 現物写真を一括縮小</h2><label class="btn">現物写真をまとめて選ぶ<input id="realfiles" type="file" accept="image/*" multiple hidden></label><div id="bulkStatus" class="small" style="margin-top:8px"></div><div id="photoGrid" class="photoGrid"></div><div id="bulkActions" style="display:none;margin-top:10px"><button id="downloadZip">ZIPで一括保存</button></div><div class="small">選んだ順に 01_photo.jpg、02_photo.jpg… として長辺1600px以内に縮小します。</div></section>
+    <div id="csvSummary" style="margin-top:12px"></div>
 
-<section class="card"><h2>④ 送り状PDFからメール準備</h2>
-  <div class="field"><label>送り状PDF</label><label class="btn">PDFを選ぶ<input id="mailPdf" type="file" accept="application/pdf" hidden></label><div id="pdfName" class="small" style="margin-top:5px">未選択</div></div>
-  <div class="two"><div class="field"><label>送信先</label><select id="recipientSelect"></select></div><div class="field"><label>納品日</label><input id="deliveryDate" type="date"></div></div>
-  <div class="field"><label>宛先メール</label><input id="mailTo" type="email" placeholder="例：market@example.jp"></div>
-  <div class="field"><label>件名</label><input id="mailSubject" type="text"></div>
-  <div class="field"><label>本文</label><textarea id="mailBody"></textarea></div>
-  <div class="row"><button id="shareMail">PDF＋文章をGmailへ</button><button id="copyTo" class="light">宛先だけコピー</button></div>
-  <div id="mailStatus" class="status">送信先を登録しておけば、毎回自動入力されます。</div>
-  <details style="margin-top:12px"><summary><b>送信先・定型文の登録</b></summary>
-    <div class="field"><label>送信先名</label><input id="rName" type="text" placeholder="例：大田市場"></div>
-    <div class="field"><label>メールアドレス</label><input id="rEmail" type="email"></div>
-    <div class="field"><label>件名テンプレート</label><input id="rSubject" type="text" value="{{納品日}}納品分 送り状 あみてるファーム"></div>
-    <div class="field"><label>本文テンプレート</label><textarea id="rBody">いつもお世話になっております。\n{{納品日}}納品分の送り状を添付いたします。\nよろしくお願いいたします。</textarea></div>
-    <div class="row"><button id="saveRecipient">この送信先を保存</button><button id="deleteRecipient" class="red">選択中を削除</button></div>
-    <div class="small" style="margin-top:6px">{{納品日}} は選んだ日付に自動で置き換わります。</div>
-  </details>
-</section>
+    <div id="unmatchedArea" style="display:none;margin-top:14px">
+      <h3>未一致品種の差し込み</h3>
+      <div class="small">一致しなかった名前ごとに、使う画像を選べます。必要なら「別名として保存」をONにしてください。</div>
+      <div id="unmatchedList" style="margin-top:10px"></div>
+      <div class="row" style="margin-top:10px">
+        <button id="applyUnmatched">未一致を反映</button>
+      </div>
+    </div>
 
-<section class="card"><h2>⑤ ホーム画面に追加</h2><div class="small">Safariの共有 →「ホーム画面に追加」。</div></section>
+    <div id="productsArea" style="display:none;margin-top:14px">
+      <h3>ユーカリ商品</h3>
+      <div class="small">ユーカリだけを自動抽出しています。コットンやグラスジェムコーン等はこの機能では無視します。</div>
+      <div class="row" style="margin-top:10px">
+        <button id="generateAllMix">ミックス画像を一括生成</button>
+      </div>
+      <div id="productsList" style="margin-top:10px"></div>
+    </div>
+  </section>
 
-<div id="editorBackdrop"><div id="editorBox"><b>画像の切り取り位置を調整</b><div class="editHint">1本指＝移動／2本指＝拡大・縮小。各枠ごとに調整できます。</div><div id="editorCanvas"></div><div class="row" style="margin-top:10px"><button id="finishEdit">この位置で完成</button><button id="cancelEdit" class="gray">戻る</button></div></div></div>
-<canvas id="cv" hidden></canvas>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="app.js?v=4.1"></script>
-</main></body></html>
+  <section class="card">
+    <h2>3. この版でできること</h2>
+    <div class="small">
+      ・CSVの詳細欄から品種名を抽出<br>
+      ・品目が「ユーカリ」の行だけ対象<br>
+      ・登録済み画像から自動照合<br>
+      ・未一致の品種は手動で差し込み<br>
+      ・必要なら別名として保存して次回から自動一致<br>
+      ・3品種＝縦3分割 / 4品種＝2×2 / 5品種＝上3枚＋下2枚
+    </div>
+  </section>
+
+  <canvas id="cv" hidden></canvas>
+  <script src="app.js"></script>
+</main>
+</body>
+</html>
