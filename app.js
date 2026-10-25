@@ -192,13 +192,32 @@ $("saleDate").onchange=applyMail;
 $("mailSubjectTpl").oninput=applyMail;$("mailBodyTpl").oninput=applyMail;$("mailTo").oninput=applyMail;
 $("copyTo").onclick=async()=>{await navigator.clipboard.writeText($("mailToPreview").value||"");alert("宛先をコピーしました。")};
 $("shareMail").onclick=async()=>{
- const f=$("pdfFile").files[0];if(!f)return alert("PDFを選んでください。");
- applyMail();let text=`宛先: ${$("mailToPreview").value}\n件名: ${$("mailSubject").value}\n\n${$("mailBody").value}`;
+ const f=$("pdfFile").files[0];
+ if(!f)return alert("PDFを選んでください。");
+ applyMail();
+
+ const subject=$("mailSubject").value||"";
+ const body=$("mailBody").value||"";
+ const to=$("mailToPreview").value||"";
+
+ // 宛先だけコピー。本文には宛先・件名を混ぜない
+ try{ if(to) await navigator.clipboard.writeText(to); }catch(e){}
+
  try{
-  if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({title:$("mailSubject").value,text,files:[f]})}
-  else{await navigator.clipboard.writeText(text);alert("文章をコピーしました。PDFはGmailで添付してください。")}
- }catch(e){}
+  if(navigator.canShare&&navigator.canShare({files:[f]})){
+    await navigator.share({
+      title:subject,
+      text:body,
+      files:[f]
+    });
+  }else{
+    await navigator.clipboard.writeText(body);
+    alert("本文をコピーしました。PDFはOutlookで添付してください。");
+  }
+ }catch(e){
+   if(e && e.name!=="AbortError") alert("Outlookへの共有に失敗しました。");
+ }
 };
 $("saleDate").value=todayJP();loadMail();applyMail();
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js?v=48").catch(()=>{})}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js?v=49").catch(()=>{})}
