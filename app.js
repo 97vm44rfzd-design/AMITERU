@@ -54,9 +54,24 @@ function parseCSV(t){
 }
 function hidx(h,names){for(const n of names){let i=h.findIndex(x=>norm(x)==norm(n));if(i>=0)return i}return -1}
 function toks(s){
- let p=(s||"").split(/[・,，/／＋+]/).map(x=>x.trim()).filter(Boolean);
- if(p.length<=1)p=(s||"").split(/[ 　]/).map(x=>x.trim()).filter(Boolean);
- return [...new Set(p.filter(x=>!/^\d+(本|束|箱)?$/.test(x)))];
+  let text=(s||"").normalize("NFKC");
+  // 送り状の「、」区切りを最優先で商品内訳ごとに分割
+  let parts=text.split(/[、,，/／＋+]/).map(x=>x.trim()).filter(Boolean);
+
+  // 各パーツから長さ・本数・束数などを除き、品種名だけを残す
+  let cleaned=parts.map(x=>{
+    let y=x;
+    // 例: 70cm / 60・70cm / 40-50cm / 60〜70cm
+    y=y.replace(/\d+(?:[・･\-－〜~～]\d+)?\s*(?:cm|センチ)/gi," ");
+    // 例: 10本 / 20束 / 1箱
+    y=y.replace(/\d+\s*(?:本|束|箱)/g," ");
+    // 残った単独数字や記号を除去
+    y=y.replace(/^[\s・･,，、/／＋+\-－〜~～]+|[\s・･,，、/／＋+\-－〜~～]+$/g,"");
+    y=y.replace(/\s+/g," ").trim();
+    return y;
+  }).filter(Boolean);
+
+  return [...new Set(cleaned)];
 }
 function lookup(vs){let m=new Map();for(const v of vs){m.set(norm(v.name),v);for(const a of(v.aliases||[]))m.set(norm(a),v)}return m}
 
@@ -139,4 +154,4 @@ $("shareMail").onclick=async()=>{
 };
 $("saleDate").value=todayJP();loadMail();applyMail();
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js?v=44").catch(()=>{})}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js?v=45").catch(()=>{})}
