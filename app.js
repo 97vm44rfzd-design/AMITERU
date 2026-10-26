@@ -220,4 +220,4 @@ $("shareMail").onclick=async()=>{
 };
 $("saleDate").value=todayJP();loadMail();applyMail();
 
-if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js?v=691").catch(()=>{})}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js?v=693").catch(()=>{})}

@@ -43,6 +43,22 @@ details{border-top:1px solid var(--line);padding-top:14px}summary{cursor:pointer
 .market-comment{margin-top:10px;padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:#f6f8f6;font-size:12px;line-height:1.55}.market-comment b,.market-comment span,.market-comment small{display:block}.market-comment span{margin-top:2px}.market-comment small{margin-top:5px;color:var(--muted)}.market-comment.tight,.market-comment.strong{background:#eef6f0;border-color:#cbded0}.market-comment.glut,.market-comment.weak{background:#fff3ef;border-color:#e8c6bb}
 .tool-icon{display:inline-grid;place-items:center;width:30px;height:30px;border:1px solid #cfb46d;border-radius:9px;background:#fbf6ea;color:#9a742b;font-size:17px;font-weight:900}.harvest-table{width:100%;border-collapse:collapse;margin-top:10px}.harvest-table th,.harvest-table td{padding:8px;border-bottom:1px solid var(--line);text-align:left}.harvest-table input{min-width:70px}.egypt-note{border-left:3px solid #b68a36;background:#fbf6ea;padding:11px 13px;border-radius:10px}.harvest-preview{max-width:340px;width:100%;border-radius:12px;border:1px solid var(--line);display:none;margin-top:10px}
 </style>
+
+<style>
+.forecast-day{cursor:pointer}
+.forecast-day:focus{outline:2px solid #b68a36;outline-offset:2px}
+.forecast-detail-card{margin-top:14px;padding:18px;border:1px solid #d4bd82;border-radius:16px;background:#fffaf1}
+.fd-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.fd-head h3{margin:2px 0 0}
+.fd-score{font-size:30px;font-weight:900;color:#22527a}.fd-score small{font-size:11px;color:#73808a;margin-left:3px}
+.fd-summary{margin:10px 0 12px;font-weight:800;color:#3f7f78}
+.fd-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fd-row{display:grid;grid-template-columns:115px 42px 1fr;gap:8px;align-items:center;padding:8px 9px;border:1px solid #eadfc8;border-radius:10px;background:#fffdf8;font-size:12px}
+.fd-row b{text-align:right}.fd-row .good{color:#55765b}.fd-row .bad{color:#9a633f}.fd-row .flat{color:#73808a}.fd-row small{color:#73808a;line-height:1.35}
+.fd-subtitle{font-size:12px;font-weight:900;margin:14px 0 7px;color:#59665f}.fd-lengths{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.fd-len{border:1px solid #eadfc8;border-radius:10px;padding:9px;background:#fff}.fd-len div{display:flex;flex-direction:column}.fd-len span{font-size:10px;color:#73808a}.fd-len strong{font-size:18px;color:#22527a}
+.fd-meta{margin-top:12px;border-top:1px solid #eadfc8;padding-top:10px}
+@media(max-width:700px){.fd-grid{grid-template-columns:1fr}.fd-lengths{grid-template-columns:1fr 1fr}.fd-row{grid-template-columns:100px 38px 1fr}}
+</style>
 </head>
 <body>
 <main>
@@ -52,7 +68,7 @@ details{border-top:1px solid var(--line);padding-top:14px}summary{cursor:pointer
     <h1>AMITERU FLOW</h1>
     <div class="brand-sub">販売・顧客・出荷を、ひとつの流れで。</div>
   </div>
-  <div class="top-actions"><span class="badge">v6.9.1</span><span class="state" id="state">Sales & customer intelligence</span></div>
+  <div class="top-actions"><span class="badge">v6.9.3</span><span class="state" id="state">Sales & customer intelligence</span></div>
 </header>
 <nav class="nav" aria-label="ページ内ナビゲーション">
   <a href="#salesDashboard">Dashboard</a><a href="#harvestScan">Harvest Scan</a><a href="#eucaForecast">𓂀 All-Seeing Eye</a><a href="#customersArea">Customers</a><a href="#imageLibrary">Images</a><a href="#shippingTools">Shipping</a><a href="#mailTools">Mail</a>
@@ -172,10 +188,10 @@ details{border-top:1px solid var(--line);padding-top:14px}summary{cursor:pointer
 
 <button id="backTop" class="backtop" type="button" aria-label="ページ上部へ戻る" title="上へ戻る">↑</button>
 <canvas id="cv" hidden></canvas>
-<script src="sales_seed.js?v=691"></script>
-<script src="dashboard.js?v=691"></script>
-<script src="harvest.js?v=691"></script>
-<script src="app.js?v=691"></script>
+<script src="sales_seed.js?v=693"></script>
+<script src="dashboard.js?v=693"></script>
+<script src="harvest.js?v=693"></script>
+<script src="app.js?v=693"></script>
 <script>
 (()=>{const b=document.getElementById("backTop");if(!b)return;b.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));const toggle=()=>{b.style.display=window.scrollY>500?"grid":"none"};window.addEventListener("scroll",toggle,{passive:true});toggle();})();
 </script>

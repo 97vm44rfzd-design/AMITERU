@@ -26,3 +26,21 @@ v6.9.1 calendar fix
 - After sales DB finishes loading, forecasts are re-rendered with historical sales learning.
 - External API failures no longer prevent the calendar itself from appearing.
 - PWA cache bumped to v691.
+
+
+v6.9.2 forecast detail
+- Tap/click a forecast calendar date to open a day-specific breakdown.
+- Shows total score, holiday/bridal/weather/producer-weather/market/import/event/closing-date/history contributions.
+- Shows length-specific forecast cards.
+- PWA cache bumped to v692.
+
+
+v6.9.3 weekday participation calibration
+- Initial auction-day participation order changed to Sunday > Thursday > Tuesday.
+- Base weekday scores: Sunday +9, Thursday +6, Tuesday +4.
+- After at least 3 auction dates of sales data, weekday performance learns from:
+  average unit price, unique buyer count, and special-sale rate.
+- Learned weekday correction is capped at +/-5 points.
+- Sunday bridal multiplier relaxed from 0.30 to 0.78.
+- Sunday event multiplier relaxed from 0.45 to 0.88.
+- Length-history weekday matching uses corrected auction date consistently.

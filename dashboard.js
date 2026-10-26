@@ -286,7 +286,10 @@ function weddingDayIndex(d){
  v*=weddingSeasonMultiplier(d); if(holidayName(d))v*=.92;return Math.max(0,v);
 }
 function bridalPotentialForAuction(d){
- let pts=0,desc=[];const hot=isHotMonth(d);const auctionWeight=d.getDay()===2?(hot?.72:1.0):d.getDay()===4?(hot?1.0:.78):.30;
+ let pts=0,desc=[];const hot=isHotMonth(d);const auctionWeight=
+  d.getDay()===0 ? .78 :
+  d.getDay()===4 ? (hot?1.0:.96) :
+  d.getDay()===2 ? (hot?.82:.90) : .75;
  for(let i=1;i<=7;i++){
   const wd=addDays(d,i);if(![5,6,0].includes(wd.getDay()))continue;const idx=weddingDayIndex(wd);if(!idx)continue;
   const proximity=Math.max(.28,1-i*.095);pts+=idx*auctionWeight*proximity*8.5; if(idx>.55)desc.push(`${wd.getMonth()+1}/${wd.getDate()} ${lunarRokuyo(wd)||''}`);
@@ -307,8 +310,9 @@ function seasonalEventFactorForAuction(d){
   ['卒園・卒業',new Date(y,2,20),11,14,1],['送別会',new Date(y,2,27),14,14,1],['離任式',new Date(y,2,31),16,12,1],['入園・入学',new Date(y,3,7),11,12,1]
  ])add(name,target,weight,start,end);
  const raw=events.reduce((a,e)=>a+e.score,0);
- // 日曜セリは直近物日の仕入れとしては弱め、火木を中心に配分
- const dayMul=d.getDay()===2?1:d.getDay()===4?.92:.45;
+ // AMITERU実運用：参加人数は 日曜 > 木曜 > 火曜。
+ // 物日のタイミング差は残すが、日曜を一律で大きく下げない。
+ const dayMul=d.getDay()===0?.88:d.getDay()===4?.96:.90;
  const weighted=events.map(e=>({...e,score:e.score*dayMul}));
  return {score:Math.round(Math.min(30,raw*dayMul)),label:events.length?events.sort((a,b)=>b.score-a.score).slice(0,3).map(e=>`${e.name} ${e.diff}日前`).join('・'):'物日なし',events:weighted};
 }
@@ -329,7 +333,7 @@ function historicalLengthFactor(d,cm){
  const m=d.getMonth()+1,dow=d.getDay(),samples=e.filter(r=>{const raw=parseDateKey(r.date);if(!raw)return false;const rd=saleToAuctionDate(r.date);const md=Math.abs((rd.getMonth()+1)-m);return (md===0||md===1||md===11)&&rd.getDay()===dow});
  if(samples.length<2)return {score:0,label:'長さ実績少'};
  const qty=samples.reduce((a,r)=>a+(Number(r.qty)||0),0),avgQty=qty/samples.length;
- const allSame=e.filter(r=>{const rd=parseDateKey(r.date);return rd&&rd.getDay()===dow});const base=allSame.length?allSame.reduce((a,r)=>a+(Number(r.qty)||0),0)/allSame.length:avgQty;
+ const allSame=e.filter(r=>{const raw=parseDateKey(r.date);if(!raw)return false;const rd=saleToAuctionDate(r.date);return rd&&rd.getDay()===dow});const base=allSame.length?allSame.reduce((a,r)=>a+(Number(r.qty)||0),0)/allSame.length:avgQty;
  const ratio=base>0?avgQty/base:1;const score=clamp(Math.round((ratio-1)*18),-8,10);
  return {score,label:`CSV長さ実績 ${samples.length}明細`};
 }
@@ -341,7 +345,49 @@ function eventLengthAdjustment(ev,cm){
 }
 
 function seasonFactor(d){const m=d.getMonth()+1;if([4,5].includes(m))return {score:8,label:'春需要'};if([9,10,11].includes(m))return {score:11,label:'秋需要'};if(m===12)return {score:6,label:'冬装飾'};return {score:1,label:'通常期'}}
-function auctionWeekdayFactor(d){if(d.getDay()===2)return {score:isHotMonth(d)?5:10,label:isHotMonth(d)?'火曜・暑期減':'火曜強め'};if(d.getDay()===4)return {score:isHotMonth(d)?12:7,label:isHotMonth(d)?'暑期の木曜強め':'木曜'};return {score:3,label:'日曜'}}
+function weekdayObservedStats(){
+ const e=allSales.filter(isEuca), by={0:[],2:[],4:[]};
+ for(const r of e){
+  const ad=saleToAuctionDate(r.date); if(!ad||!by[ad.getDay()])continue;
+  by[ad.getDay()].push(r);
+ }
+ const result={};
+ for(const dow of [0,2,4]){
+  const rows=by[dow], dates=[...new Set(rows.map(r=>dateKey(saleToAuctionDate(r.date))))];
+  const prices=rows.map(r=>Number(r.unitPrice)||0).filter(Boolean);
+  const buyers=new Set(rows.map(r=>r.buyer).filter(Boolean)).size;
+  const specials=rows.length?rows.filter(r=>r.saleType==='特販').length/rows.length:0;
+  result[dow]={
+   rows:rows.length,dates:dates.length,buyers,
+   avgPrice:prices.length?prices.reduce((a,b)=>a+b,0)/prices.length:0,
+   specialRate:specials
+  };
+ }
+ return result;
+}
+function weekdayLearnedAdjustment(d){
+ const stats=weekdayObservedStats(), cur=stats[d.getDay()];
+ if(!cur||cur.dates<3)return {score:0,label:'曜日実績学習待ち',stats:cur||null};
+ const eligible=[0,2,4].map(k=>stats[k]).filter(x=>x&&x.dates>=3);
+ if(eligible.length<2)return {score:0,label:'曜日実績学習待ち',stats:cur};
+ const avgPrice=eligible.reduce((a,x)=>a+x.avgPrice,0)/eligible.length;
+ const avgBuyers=eligible.reduce((a,x)=>a+x.buyers,0)/eligible.length;
+ const avgSpecial=eligible.reduce((a,x)=>a+x.specialRate,0)/eligible.length;
+ const pricePart=avgPrice>0?(cur.avgPrice/avgPrice-1)*10:0;
+ const buyerPart=avgBuyers>0?(cur.buyers/avgBuyers-1)*4:0;
+ const specialPart=(cur.specialRate-avgSpecial)*4;
+ const score=clamp(Math.round(pricePart+buyerPart+specialPart),-5,5);
+ return {score,label:`曜日実績 ${cur.dates}セリ日・買参${cur.buyers}件`,stats:cur};
+}
+function auctionWeekdayFactor(d){
+ // 実際の参加人数の初期順位：日曜 > 木曜 > 火曜
+ const dow=d.getDay();
+ const base=dow===0?9:dow===4?6:4;
+ const learned=weekdayLearnedAdjustment(d);
+ const score=base+learned.score;
+ const name=dow===0?'日曜・参加最多':dow===4?'木曜・参加中位':'火曜・参加少なめ';
+ return {score,label:`${name}${learned.score?`／実績補正 ${learned.score>0?'+':''}${learned.score}`:''}`,base,learned};
+}
 function csvRows(text){
  const rows=[];let row=[],cell='',q=false;
  for(let i=0;i<text.length;i++){const c=text[i];if(q){if(c==='"'&&text[i+1]==='"'){cell+='"';i++}else if(c==='"')q=false;else cell+=c}else{if(c==='"')q=true;else if(c===','){row.push(cell);cell=''}else if(c==='\n'){row.push(cell.replace(/\r$/,''));rows.push(row);row=[];cell=''}else cell+=c}}
@@ -442,7 +488,11 @@ function forecastFor(d){
 }
 function weatherBadgeForDate(d){const r=fcAuto.weather?.[isoKey(d)];return r?`${weatherLabel(r.kind)}${r.pop?` ${r.pop}%`:''}`:''}
 function renderForecastCalendars(){
- const root=D('forecastCalendars');if(!root)return;const now=new Date();
+ const root=D('forecastCalendars');if(!root)return;
+ root.addEventListener('click',e=>{
+   const cell=e.target.closest('[data-date]');
+   if(cell&&cell.dataset.date) openForecastDetail(cell.dataset.date);
+ });const now=new Date();
  root.innerHTML=[0,1].map(off=>{const first=new Date(now.getFullYear(),now.getMonth()+off,1),y=first.getFullYear(),m=first.getMonth(),days=new Date(y,m+1,0).getDate(),blanks=first.getDay();let cells='';for(let i=0;i<blanks;i++)cells+='<div class="daycell empty"></div>';
   for(let n=1;n<=days;n++){const d=new Date(y,m,n),auction=isAuctionDay(d),weekend=[0,6].includes(d.getDay()),r=lunarRokuyo(d),fc=auction?forecastFor(d):null,wb=weekend?weatherBadgeForDate(d):'',hn=holidayName(d);cells+=`<div class="daycell ${auction?`auction heat${fc.level}`:''} ${weekend?'weekend':''}" data-date="${dateKey(d)}" data-auction="${auction?1:0}"><div class="daynum">${n}${hn?'<span class="holiday-dot">●</span>':''}</div><div class="rokuyo">${r||''}${hn?`・${hn}`:''}</div>${auction?`<div class="auction-label">${['日','月','火','水','木','金','土'][d.getDay()]}曜セリ</div><div class="heat-score">${fc.score}</div>`:''}${weekend&&wb?`<span class="weather-badge">${wb}</span>`:''}</div>`}
   return `<div class="forecast-cal"><div class="cal-head"><b>${y}年${m+1}月</b><span class="small">火・木・日セリ</span></div><div class="cal-week">${['日','月','火','水','木','金','土'].map(x=>`<div>${x}</div>`).join('')}</div><div class="cal-days">${cells}</div></div>`}).join('');
@@ -456,7 +506,7 @@ function showForecastDetail(d){
  <div class="factor-list"><div class="factor"><span>過去実績（CSV学習）</span><strong>+${fc.h.score}</strong></div><div class="factor"><span>物日需要</span><strong>+${fc.ev.score}</strong></div><div class="factor"><span>婚礼需要推定</span><strong>+${fc.b.score}</strong></div><div class="factor"><span>小売り需要</span><strong>+${fc.r.score}</strong></div><div class="factor"><span>週末天気</span><strong>${fc.r.weather.score>=0?'+':''}${fc.r.weather.score}</strong></div><div class="factor"><span>${fc.w.label}</span><strong>+${fc.w.score}</strong></div><div class="factor"><span>${fc.s.label}</span><strong>+${fc.s.score}</strong></div><div class="factor"><span>外部ユーカリ市況</span><strong>${fc.o.score>=0?'+':''}${fc.o.score}</strong></div><div class="factor"><span>海外供給（輸入）</span><strong>${fc.imp.score>=0?'+':''}${fc.imp.score}</strong></div><div class="factor"><span>連休補正</span><strong>${fc.hp}</strong></div><div class="factor"><span>${fc.settle.label}</span><strong>${fc.settle.score>=0?'+':''}${fc.settle.score}</strong></div><div class="factor"><span>実績誤差の学習補正</span><strong>${fc.learnBias>=0?'+':''}${fc.learnBias}</strong></div></div>
  <div class="small" style="margin-top:9px">過去：${fc.h.label} ／ 物日：${fc.ev.label} ／ 婚礼：${fc.b.label}（${fc.b.mode}） ／ 天気：${fc.r.weather.label} ／ 他市場：${fc.o.label} ／ 輸入：${fc.imp.label} ／ 締め日：${fc.settle.label}</div>
  ${(()=>{const mc=combinedMarketComment();return mc?.comment?`<div class="market-comment ${mc.tone||'neutral'}"><b>市況コメント</b><span>${mc.comment}</span>${mc.yoyPrice!=null||mc.yoyQty!=null?`<small>前年同月比：${mc.yoyPrice!=null?`価格 ${mc.yoyPrice>=0?'+':''}${Math.round(mc.yoyPrice*100)}%`:''}${mc.yoyPrice!=null&&mc.yoyQty!=null?' ／ ':''}${mc.yoyQty!=null?`数量 ${mc.yoyQty>=0?'+':''}${Math.round(mc.yoyQty*100)}%`:''}</small>`:''}${mc.producerWeather?`<small>産地天気補正：${mc.producerWeather.label}</small>`:''}${mc.importSupply?`<small>海外供給：${mc.importSupply.label}</small>`:''}</div>`:''})()}
- <div class="forecast-note" style="margin-top:8px">入力不要。予測幅と信頼度を表示し、単純予測（過去実績＋曜日＋季節＋物日）とも常時比較します。CSV取込時には予測と実績の誤差を記録し、同じ方向のズレが続いた時だけ最大±6点まで緩やかに補正します。極端な単価は学習時の重みを下げます。小売りは関東7都県の週末天気を自動反映。母の日・卒園/卒業・入園/入学・父の日・敬老の日・クリスマス・送別会・離任式は直前の火木日セリへ物日需要として前倒し加点します。長さは40/50/60/70cmを別々に予測し、母の日はアレンジ用途で40〜50cm、卒園・卒業は予算を抑えた花束・アレンジ需要で40〜50cmを強めに評価。送別会・離任式は50〜60cm、クリスマスは50〜60cmまで広めに評価します。売立CSVを追加するたび、同時期・同じセリ曜日の長さ別実績も自動学習して補正します。ブライダルは週末の曜日・六曜・婚礼シーズンから需要指数を推定し、通常期は火曜、暑い時期は木曜へ強めに配分します。天気予報がまだ出ていない先の日付は中立扱いです。外部市況は東京都中央卸売市場の花き日報からユーカリを自動抽出し、価格・数量の直近変化を補助シグナルとして使います。露地ユーカリの供給量は天候に左右されるため、茨城・千葉はセリ1〜2日前、静岡・長野・愛媛は2〜3日前の雨・強風を自動取得し、数量減が需要増なのか採花・出荷減なのかを補正してコメントします。輸入は植物防疫所・財務省貿易統計を海外供給の補助シグナルとして監視し、取れる場合は前年差を最大±6点で反映します。ユーカリ単独の数量を安定抽出できない場合は推定値を作らず0点（中立）とし、その旨を警告します。買参人の15日締め・月末締めについては、直前セリを−4点、2回前を−2点の軽い買い控え補正から開始し、売立CSVの答え合わせが3回以上たまった段階で最大±2点だけ自動調整します。取得失敗・更新停止・形式変更を検知した場合は画面上に警告します。</div>`;
+ <div class="forecast-note" style="margin-top:8px">入力不要。予測幅と信頼度を表示し、単純予測（過去実績＋曜日＋季節＋物日）とも常時比較します。CSV取込時には予測と実績の誤差を記録し、同じ方向のズレが続いた時だけ最大±6点まで緩やかに補正します。極端な単価は学習時の重みを下げます。小売りは関東7都県の週末天気を自動反映。母の日・卒園/卒業・入園/入学・父の日・敬老の日・クリスマス・送別会・離任式は直前の火木日セリへ物日需要として前倒し加点します。長さは40/50/60/70cmを別々に予測し、母の日はアレンジ用途で40〜50cm、卒園・卒業は予算を抑えた花束・アレンジ需要で40〜50cmを強めに評価。送別会・離任式は50〜60cm、クリスマスは50〜60cmまで広めに評価します。売立CSVを追加するたび、同時期・同じセリ曜日の長さ別実績も自動学習して補正します。ブライダルは週末の曜日・六曜・婚礼シーズンから需要指数を推定します。曜日参加度は実運用に合わせて日曜＞木曜＞火曜を初期値とし、売立CSVの曜日別平均単価・買参数・特販率が3セリ日以上たまると最大±5点で自動補正します。天気予報がまだ出ていない先の日付は中立扱いです。外部市況は東京都中央卸売市場の花き日報からユーカリを自動抽出し、価格・数量の直近変化を補助シグナルとして使います。露地ユーカリの供給量は天候に左右されるため、茨城・千葉はセリ1〜2日前、静岡・長野・愛媛は2〜3日前の雨・強風を自動取得し、数量減が需要増なのか採花・出荷減なのかを補正してコメントします。輸入は植物防疫所・財務省貿易統計を海外供給の補助シグナルとして監視し、取れる場合は前年差を最大±6点で反映します。ユーカリ単独の数量を安定抽出できない場合は推定値を作らず0点（中立）とし、その旨を警告します。買参人の15日締め・月末締めについては、直前セリを−4点、2回前を−2点の軽い買い控え補正から開始し、売立CSVの答え合わせが3回以上たまった段階で最大±2点だけ自動調整します。取得失敗・更新停止・形式変更を検知した場合は画面上に警告します。</div>`;
 }
 async function fetchAutoWeather(){
  const settled=await Promise.allSettled(KANTO_WEATHER_POINTS.map(async p=>{
@@ -526,6 +576,56 @@ async function refreshForecastExternal(force=false){
  if(fcAuto.weatherStatus==='取得済'||fcAuto.producerWeatherStatus==='取得済'||fcAuto.holidayStatus==='取得済'||fcAuto.marketStatus==='取得済'||fcAuto.importStatus==='取得済'||fcAuto.importStatus==='ソース確認済'||hadWeather||hadProducerWeather||hadHolidays||hadMarket||hadImport)fcAuto.updatedAt=new Date().toISOString();
  fcAutoSave();renderForecastCalendars();
 }
+
+function forecastDetailHtml(d){
+ const p=forecastDay(d);
+ const rows=[
+  ['基本点',10,'基礎'],
+  ['祝日・連休',p.holiday?.score||0,p.holiday?.label||''],
+  ['婚礼需要',p.bridal?.score||0,p.bridal?.label||''],
+  ['関東天気',Math.round((p.regionWeather?.score||0)*.55),p.regionWeather?.label||''],
+  ['産地天気',Math.round((p.producerWeather?.score||0)*.45),p.producerWeather?.label||''],
+  ['他市場',p.market?.score||0,p.market?.label||''],
+  ['輸入動向',p.imports?.score||0,p.imports?.label||''],
+  ['物日・イベント',p.event?.score||0,p.event?.label||''],
+  ['締め日前補正',p.settlement?.score||0,p.settlement?.label||''],
+  ['過去実績学習',p.learningBias||0,p.learningLabel||'']
+ ];
+ const scoreCls=v=>v>0?'good':v<0?'bad':'flat';
+ const len=(p.lengthForecasts||[]).map(x=>`
+   <div class="fd-len">
+    <div><b>${esc(String(x.length||''))}cm</b><span>${esc(x.label||'')}</span></div>
+    <strong>${esc(String(x.score??''))}</strong>
+   </div>`).join('');
+ return `
+  <div class="forecast-detail-card">
+   <div class="fd-head">
+    <div>
+     <div class="section-kicker">All-Seeing Eye detail</div>
+     <h3>${d.getMonth()+1}月${d.getDate()}日の予測内訳</h3>
+    </div>
+    <div class="fd-score">${p.score}<small>/100</small></div>
+   </div>
+   <div class="fd-summary">${esc(p.label||'')}</div>
+   <div class="fd-grid">
+    ${rows.map(r=>`<div class="fd-row"><span>${r[0]}</span><b class="${scoreCls(r[1])}">${r[1]>0?'+':''}${r[1]}</b><small>${esc(r[2]||'')}</small></div>`).join('')}
+   </div>
+   <div class="fd-subtitle">長さ別予測</div>
+   <div class="fd-lengths">${len||'<div class="small">長さ別データなし</div>'}</div>
+   <div class="fd-meta small">${esc(p.reason||'')}</div>
+  </div>`;
+}
+
+function openForecastDetail(dateStr){
+ const el=D('forecastDetail');
+ if(!el)return;
+ const d=parseDateKey(dateStr);
+ if(!d)return;
+ el.innerHTML=forecastDetailHtml(d);
+ el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+window.openForecastDetail=openForecastDetail;
 function initForecast(){
  const root=D('forecastCalendars');if(!root)return;
  try{
