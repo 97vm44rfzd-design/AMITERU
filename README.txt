@@ -62,3 +62,12 @@ v6.9.5 other-market summary
 - Shows recent price/quantity, prior-period change, year-over-year price/quantity.
 - Shows market comment, producer-weather signal, import-supply signal, and All-Seeing Eye market correction.
 - The card refreshes whenever the forecast calendar is redrawn.
+
+
+v6.9.6 stability fix
+- Fixed the forecast initialization crash introduced by the other-market summary card.
+- dashboard.js now has its own HTML-escape helper and no longer depends on app.js load order.
+- Other-market summary rendering is isolated in try/catch and can never remove the forecast calendar.
+- Tokyo market / import fetch failures are treated as auxiliary-source limitations, not forecast-engine failures.
+- Calendar continues using cached or neutral/seasonal fallback data when browser CORS blocks public sites.
+- PWA cache bumped to v696.

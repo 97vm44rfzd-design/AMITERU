@@ -5,6 +5,7 @@ const compactYen=n=>{n=Number(n)||0;return n>=10000?`¥${(n/10000).toFixed(n>=10
 const fmtDate=s=>s&&s.length>=8?`${s.slice(0,4)}/${Number(s.slice(4,6))}/${Number(s.slice(6,8))}`:(s||'');
 const today8=()=>{const d=new Date(); return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`};
 const nrm=s=>(s||'').normalize('NFKC').replace(/[\s　]/g,'').toLowerCase();
+const hesc=s=>String(s??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function itemGroup(item,variety=''){
  const x=nrm(item),v=nrm(variety);
  if(x.includes('ユーカリ')||x.includes('ﾕｰｶﾘ')) return 'ユーカリ';
@@ -518,11 +519,11 @@ function renderOtherMarketSummary(){
      <div class="section-kicker">Nearby market pulse</div>
      <h3>他市場の直近市況</h3>
     </div>
-    <span class="market-status">${esc(status)}</span>
+    <span class="market-status">${hesc(status)}</span>
    </div>
    <div class="market-source-row">
     <b>大田市場・ユーカリ</b>
-    <span>最終認識 ${esc(lastLabel)} ／ 更新 ${esc(updated)}</span>
+    <span>最終認識 ${hesc(lastLabel)} ／ 更新 ${hesc(updated)}</span>
    </div>
    <div class="market-metrics">
     <div><span>直近価格</span><b>${yen(m.price)}</b><small>前期間比 ${pct(m.priceChange)}</small></div>
@@ -530,10 +531,10 @@ function renderOtherMarketSummary(){
     <div><span>前年同月・価格</span><b>${pct(m.yoyPrice)}</b><small>${m.yoyPrice==null?'比較データ蓄積中':'前年同月との差'}</small></div>
     <div><span>前年同月・数量</span><b>${pct(m.yoyQty)}</b><small>${m.yoyQty==null?'比較データ蓄積中':'前年同月との差'}</small></div>
    </div>
-   <div class="market-summary-comment"><b>市況判断</b><span>${esc(headline)}</span></div>
+   <div class="market-summary-comment"><b>市況判断</b><span>${hesc(headline)}</span></div>
    <div class="market-signals">
-    <span>産地天気：${esc(producer?.label||'データなし')}</span>
-    <span>海外供給：${esc(imp?.label||'データなし')}</span>
+    <span>産地天気：${hesc(producer?.label||'データなし')}</span>
+    <span>海外供給：${hesc(imp?.label||'データなし')}</span>
     <span>All-Seeing Eye補正：${Number.isFinite(combined?.score)?`${combined.score>=0?'+':''}${Math.round(combined.score)}点`:(Number.isFinite(m.score)?`${m.score>=0?'+':''}${Math.round(m.score)}点`:'—')}</span>
    </div>
   </div>`;
@@ -584,7 +585,11 @@ function renderForecastCalendars(){
   st.textContent=`自動取得：関東7都県 ${wu}／主要産地天気 ${fcAuto.producerWeatherStatus}${fcAuto.producerWeatherCoverage?` ${fcAuto.producerWeatherCoverage}`:''}／祝日 ${fcAuto.holidayStatus}／大田市場 ${fcAuto.marketStatus}（${mu}）／輸入 ${fcAuto.importStatus}（${iu}）／全体更新 ${up}${fcAuto.weatherCoverage?`／${fcAuto.weatherCoverage}`:''}`;
  }
  renderForecastHealth();
- renderOtherMarketSummary();
+ try{renderOtherMarketSummary()}catch(e){
+  console.error('market summary render',e);
+  const ms=D('otherMarketSummary');
+  if(ms)ms.innerHTML='<div class="source-alert warn"><b>他市場の直近市況</b><span>外部市況欄の表示に失敗しましたが、需要予測カレンダーは通常どおり利用できます。</span></div>';
+ }
 }
 function showForecastDetail(d){
  const fc=forecastFor(d);
@@ -643,12 +648,12 @@ async function fetchExternalMarket(){
 function marketDataAgeDays(){if(!fcAuto.marketLastDate)return null;const t=Date.parse(fcAuto.marketLastDate+'T00:00:00+09:00');return Number.isFinite(t)?Math.floor((Date.now()-t)/86400000):null}
 function renderForecastHealth(){
  const el=D('forecastHealth');if(!el)return;const msgs=[];const age=marketDataAgeDays();
- if(fcAuto.marketStatus==='取得失敗')msgs.push({type:'warn',title:'外部市況を取得できません',body:`東京都中央卸売市場のデータ取得に失敗しました。${fcAuto.marketError?` ${fcAuto.marketError}`:''} 前回データがあればそれを使い、なければ季節平均で予測しています。`});
+ if(fcAuto.marketStatus==='取得失敗')msgs.push({type:'warn',title:'外部市況はブラウザから直接取得できません',body:`東京都中央卸売市場は端末・ブラウザの制限で直接取得できない場合があります。${fcAuto.marketError?` ${fcAuto.marketError}`:''} カレンダーは前回データまたは季節平均で継続します。`});
  if(fcAuto.marketStatus==='形式変更')msgs.push({type:'danger',title:'外部データ形式が変わった可能性があります',body:'ユーカリ行を認識できません。AMITERU FLOWの更新が必要な可能性があります。'});
  if(age!=null&&age>21)msgs.push({type:'warn',title:'外部市況の更新が止まっている可能性があります',body:`大田市場のユーカリ最終認識日は ${fcAuto.marketLastDate} です。リンク切れ・掲載休止・ユーカリ取引なしのいずれかを確認してください。`});
  if(fcAuto.weatherStatus==='取得失敗')msgs.push({type:'warn',title:'関東天気を取得できません',body:'前回キャッシュまたは天気中立で予測しています。'});
  if(fcAuto.producerWeatherStatus==='取得失敗')msgs.push({type:'warn',title:'主要産地の天気を取得できません',body:'外部市況の数量変化は産地天気補正なしで評価しています。'});
- if(fcAuto.importStatus==='取得失敗')msgs.push({type:'warn',title:'輸入統計を取得できません',body:`海外供給は中立で予測しています。${fcAuto.importError||''}`});
+ if(fcAuto.importStatus==='取得失敗')msgs.push({type:'warn',title:'輸入統計はブラウザから直接取得できません',body:`公式サイトは端末・ブラウザの制限で直接取得できない場合があります。海外供給は中立(0点)で予測を継続します。${fcAuto.importError?` ${fcAuto.importError}`:''}`});
  if(fcAuto.importStatus==='ソース確認済')msgs.push({type:'warn',title:'輸入統計は補助情報として待機中',body:'公式統計ソースへの接続は確認済みですが、ユーカリ単独の数量をブラウザから安定抽出できないため、現在は0点（中立）です。誤った数量で相場判断しないための安全策です。'});
  if(!msgs.length){el.innerHTML='<div class="source-ok">自動データ正常：関東天気・主要産地天気・祝日・外部市況・輸入供給の取得状態に問題はありません。</div>';return}
  el.innerHTML=msgs.map(m=>`<div class="source-alert ${m.type}"><b>${m.title}</b><span>${m.body}</span></div>`).join('');
@@ -677,7 +682,11 @@ function initForecast(){
   });
  }catch(e){
   console.error('forecast init',e);
-  root.innerHTML='<div class="source-alert danger"><b>予測カレンダー初期化エラー</b><span>再読み込みしてください。販売DBとは独立して復旧できるよう修正済みです。</span></div>';
+  const st=D('forecastAutoStatus');
+  if(st)st.textContent='予測カレンダーはローカルデータで表示中／一部補助データの初期化に失敗';
+  if(!root.children.length){
+   root.innerHTML='<div class="source-alert danger"><b>予測カレンダー初期化エラー</b><span>再読み込みしてください。</span></div>';
+  }
  }
 }
 
