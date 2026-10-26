@@ -1,3 +1,5 @@
+
+const AMITERU_PROXY='https://amiteru-flow-proxy.77hs6mt8h6.workers.dev';
 (()=>{
 const D=id=>document.getElementById(id);
 const yen=n=>new Intl.NumberFormat('ja-JP',{style:'currency',currency:'JPY',maximumFractionDigits:0}).format(Number(n)||0);
@@ -166,6 +168,13 @@ let fcAuto={weather:{},producerWeather:{},holidays:{},updatedAt:'',weatherThroug
 function fcAutoLoad(){try{const v=JSON.parse(localStorage.getItem(FC_CACHE_KEY)||'{}');if(v&&typeof v==='object')fcAuto={...fcAuto,...v}}catch(e){}}
 function fcAutoSave(){try{localStorage.setItem(FC_CACHE_KEY,JSON.stringify(fcAuto))}catch(e){}}
 function dateKey(d){return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`}
+function parseDateKey(v){
+ if(v instanceof Date)return new Date(v.getFullYear(),v.getMonth(),v.getDate());
+ const x=String(v||'').replace(/\D/g,'');
+ if(x.length>=8)return new Date(+x.slice(0,4),+x.slice(4,6)-1,+x.slice(6,8));
+ const d=new Date(v);
+ return Number.isNaN(d.getTime())?null:d;
+}
 function isoKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function addDays(d,n){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()+n);return x}
 function clamp(v,a=0,b=100){return Math.max(a,Math.min(b,Math.round(v)))}
@@ -678,8 +687,8 @@ async function fetchAutoHolidays(){
 }
 async function fetchImportSupply(){
  const urls=[
-  'https://www.pps.maff.go.jp/TokeiWWW/Pages/toukeiList/toukeiInfoList.xhtml',
-  'https://www.customs.go.jp/tariff/2026_04_01/data/j_06.htm'
+  'https://amiteru-flow-proxy.77hs6mt8h6.workers.dev/import/pps',
+  'https://amiteru-flow-proxy.77hs6mt8h6.workers.dev/import/customs'
  ];
  let ok=0,notes=[];
  for(const url of urls){try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);const t=await r.text();if(/輸入検査|0604\.20|生鮮のもの/.test(t)){ok++;notes.push(url.includes('pps.maff')?'植物防疫統計':'貿易統計0604.20')}}catch(e){}}
@@ -703,12 +712,12 @@ async function fetchExternalMarket(){
 function marketDataAgeDays(){if(!fcAuto.marketLastDate)return null;const t=Date.parse(fcAuto.marketLastDate+'T00:00:00+09:00');return Number.isFinite(t)?Math.floor((Date.now()-t)/86400000):null}
 function renderForecastHealth(){
  const el=D('forecastHealth');if(!el)return;const msgs=[];const age=marketDataAgeDays();
- if(fcAuto.marketStatus==='取得失敗')msgs.push({type:'warn',title:'外部市況はブラウザから直接取得できません',body:`東京都中央卸売市場は端末・ブラウザの制限で直接取得できない場合があります。${fcAuto.marketError?` ${fcAuto.marketError}`:''} カレンダーは前回データまたは季節平均で継続します。`});
+ if(fcAuto.marketStatus==='取得失敗')msgs.push({type:'warn',title:'外部市況：AMITERU Proxy経由',body:`東京都中央卸売市場は端末・ブラウザの制限で直接取得できない場合があります。${fcAuto.marketError?` ${fcAuto.marketError}`:''} カレンダーは前回データまたは季節平均で継続します。`});
  if(fcAuto.marketStatus==='形式変更')msgs.push({type:'danger',title:'外部データ形式が変わった可能性があります',body:'ユーカリ行を認識できません。AMITERU FLOWの更新が必要な可能性があります。'});
  if(age!=null&&age>21)msgs.push({type:'warn',title:'外部市況の更新が止まっている可能性があります',body:`大田市場のユーカリ最終認識日は ${fcAuto.marketLastDate} です。リンク切れ・掲載休止・ユーカリ取引なしのいずれかを確認してください。`});
  if(fcAuto.weatherStatus==='取得失敗')msgs.push({type:'warn',title:'関東天気を取得できません',body:'前回キャッシュまたは天気中立で予測しています。'});
  if(fcAuto.producerWeatherStatus==='取得失敗')msgs.push({type:'warn',title:'主要産地の天気を取得できません',body:'外部市況の数量変化は産地天気補正なしで評価しています。'});
- if(fcAuto.importStatus==='取得失敗')msgs.push({type:'warn',title:'輸入統計はブラウザから直接取得できません',body:`公式サイトは端末・ブラウザの制限で直接取得できない場合があります。海外供給は中立(0点)で予測を継続します。${fcAuto.importError?` ${fcAuto.importError}`:''}`});
+ if(fcAuto.importStatus==='取得失敗')msgs.push({type:'warn',title:'輸入統計：AMITERU Proxy経由',body:`公式サイトは端末・ブラウザの制限で直接取得できない場合があります。海外供給は中立(0点)で予測を継続します。${fcAuto.importError?` ${fcAuto.importError}`:''}`});
  if(fcAuto.importStatus==='ソース確認済')msgs.push({type:'warn',title:'輸入統計は補助情報として待機中',body:'公式統計ソースへの接続は確認済みですが、ユーカリ単独の数量をブラウザから安定抽出できないため、現在は0点（中立）です。誤った数量で相場判断しないための安全策です。'});
  if(!msgs.length){el.innerHTML='<div class="source-ok">自動データ正常：関東天気・主要産地天気・祝日・外部市況・輸入供給の取得状態に問題はありません。</div>';return}
  el.innerHTML=msgs.map(m=>`<div class="source-alert ${m.type}"><b>${m.title}</b><span>${m.body}</span></div>`).join('');

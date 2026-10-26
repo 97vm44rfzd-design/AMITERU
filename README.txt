@@ -80,3 +80,21 @@ v6.9.7 detail click + holiday display fix
 - showForecastDetail is exposed globally as a second safety path.
 - Saturday/Sunday/holiday no longer paint the whole cell.
 - Only the date number is blue (Saturday) or red (Sunday/holiday), preserving forecast heat colors.
+
+
+v6.9.8 parseDateKey hotfix
+- Added the missing parseDateKey() helper used by historical length/day calculations.
+- This fixes the forecast detail error: "parseDateKey is not defined".
+- Detail rendering and forecast calculations can now parse YYYYMMDD / YYYY-MM-DD safely.
+- PWA cache bumped to v698.
+
+
+v6.9.9 Cloudflare Worker proxy
+- Tokyo wholesale market data now loads through:
+  https://amiteru-flow-proxy.77hs6mt8h6.workers.dev/market?year=YYYY
+- Plant protection statistics now load through:
+  https://amiteru-flow-proxy.77hs6mt8h6.workers.dev/import/pps
+- Customs source now loads through:
+  https://amiteru-flow-proxy.77hs6mt8h6.workers.dev/import/customs
+- This avoids browser CORS restrictions that caused Failed to fetch in the local ZIP/PWA.
+- PWA cache bumped to v699.
