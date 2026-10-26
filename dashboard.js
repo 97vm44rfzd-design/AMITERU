@@ -425,6 +425,81 @@ function parseTokyoEucaCsv(text){
  if(!e.length)throw new Error('ユーカリ行を認識できません');
  return {rows:e,headers:h};
 }
+
+function xlsxRowsFromBuffer(buf){
+ if(typeof XLSX==='undefined')throw new Error('Excel解析ライブラリを読み込めません');
+ const wb=XLSX.read(buf,{type:'array',cellDates:true});
+ const out=[];
+ for(const name of wb.SheetNames){
+  const ws=wb.Sheets[name];
+  const arr=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+  if(arr?.length)out.push({name,rows:arr});
+ }
+ return out;
+}
+function detectHeaderRow(rows){
+ const words=['品目','品名','市場','数量','金額','高値','中値','安値','平均'];
+ let best={idx:-1,score:0};
+ for(let i=0;i<Math.min(rows.length,40);i++){
+  const r=rows[i]||[];
+  const txt=r.map(x=>String(x||'').replace(/\s/g,'')).join('|');
+  const score=words.reduce((a,w)=>a+(txt.includes(w)?1:0),0);
+  if(score>best.score)best={idx:i,score};
+ }
+ return best.score>=2?best.idx:-1;
+}
+function normalizeMarketMonthDate(year,month,v){
+ const d=normalizeMarketDate(v);
+ return d||`${year}-${String(month).padStart(2,'0')}-01`;
+}
+function parseTokyoEucaXlsx(buf,year,month){
+ const sheets=xlsxRowsFromBuffer(buf), e=[], schemas=[];
+ for(const sh of sheets){
+  const hi=detectHeaderRow(sh.rows); if(hi<0)continue;
+  const h=(sh.rows[hi]||[]).map(x=>String(x||''));
+  schemas.push(`${sh.name}:${h.join('|')}`);
+  const itemI=findHeader(h,['品目名','品目','品名','品種']);
+  const marketI=findHeader(h,['市場名','市場']);
+  const dateI=findHeader(h,['年月日','取引日','日付','販売日']);
+  const highI=findHeader(h,['高値']);
+  const midI=findHeader(h,['中値','中間値']);
+  const lowI=findHeader(h,['安値']);
+  const avgI=findHeader(h,['平均価格','平均単価','平均','単価']);
+  const qtyI=findHeader(h,['数量','販売量','取扱数量','入荷数量','本数']);
+  const amountI=findHeader(h,['金額','販売金額','取扱金額']);
+  for(const r of sh.rows.slice(hi+1)){
+   const item=itemI>=0?String(r[itemI]||''):r.join(' ');
+   if(!/ユーカリ/.test(item))continue;
+   if(marketI>=0 && r[marketI] && !/大田/.test(String(r[marketI])))continue;
+   const date=normalizeMarketMonthDate(year,month,dateI>=0?r[dateI]:'');
+   let price=avgI>=0?marketParseNumber(r[avgI]):null;
+   if(!(price>0)){
+    const vals=[midI,highI,lowI].filter(i=>i>=0).map(i=>marketParseNumber(r[i])).filter(n=>n>0);
+    if(vals.length)price=vals.reduce((a,b)=>a+b,0)/vals.length;
+   }
+   let qty=qtyI>=0?marketParseNumber(r[qtyI]):null;
+   const amount=amountI>=0?marketParseNumber(r[amountI]):null;
+   if(!(price>0)&&amount>0&&qty>0)price=amount/qty;
+   e.push({date,price:price>0?price:null,qty:qty>0?qty:null,sourceMonth:`${year}-${String(month).padStart(2,'0')}`});
+  }
+ }
+ if(!e.length)throw new Error(`ユーカリ行を認識できません（${year}/${month}）`);
+ return {rows:e,schema:schemas.join('\n').slice(0,1500)};
+}
+async function fetchMarketMeta(year){
+ const r=await fetch(`${AMITERU_PROXY}/market/meta?year=${year}`,{cache:'no-store'});
+ if(!r.ok)throw new Error(`市場メタ HTTP ${r.status}`);
+ const j=await r.json();
+ if(!j?.ok)throw new Error(j?.error||'市場メタ取得失敗');
+ return j;
+}
+async function fetchMarketMonth(year,month){
+ const r=await fetch(`${AMITERU_PROXY}/market/raw?year=${year}&month=${month}`,{cache:'no-store'});
+ if(!r.ok)throw new Error(`市場Excel HTTP ${r.status}`);
+ const buf=await r.arrayBuffer();
+ return parseTokyoEucaXlsx(buf,year,month);
+}
+
 function median(a){const x=a.filter(Number.isFinite).sort((a,b)=>a-b);if(!x.length)return null;const i=Math.floor(x.length/2);return x.length%2?x[i]:(x[i-1]+x[i])/2}
 function marketSignalFromRows(rows){
  const dated=rows.filter(x=>x.date).sort((a,b)=>a.date.localeCompare(b.date));const last=dated.at(-1)?.date||'';
@@ -454,7 +529,7 @@ function marketSignalFromRows(rows){
 }
 function otherMarketFactor(d){
  const live=marketCommentWithProducerWeather(fcAuto.market);
- if(live&&Number.isFinite(live.score)&&fcAuto.marketStatus==='取得済')return {score:live.score,label:`大田市場 ${live.label}${live.lastDate?`（${live.lastDate.slice(5).replace('-','/')}まで）`:''}`,source:'東京都中央卸売市場日報',producerWeather:live.producerWeather};
+ if(live&&Number.isFinite(live.score)&&fcAuto.marketStatus==='取得済')return {score:live.score,label:`大田市場 ${live.label}${live.lastDate?`（${live.lastDate.slice(5).replace('-','/')}まで）`:''}`,source:'東京都中央卸売市場・花き月報明細',producerWeather:live.producerWeather};
  const v=TOKYO_EUCA_5Y[d.getMonth()],avg=TOKYO_EUCA_5Y.reduce((a,b)=>a+b,0)/12;const delta=(v-avg)/avg;
  const score=clamp(delta*45,-9,9);return {score,label:`大田市場季節値 ${v}円/本（外部日報未取得）`,source:'公表月次の5年平均'};
 }
@@ -532,7 +607,7 @@ function renderOtherMarketSummary(){
    </div>
    <div class="market-source-row">
     <b>大田市場・ユーカリ</b>
-    <span>最終認識 ${hesc(lastLabel)} ／ 更新 ${hesc(updated)}</span>
+    <span>${hesc(fcAuto.marketSourceMonth||'最新月')}明細 ／ 公開 ${hesc(fcAuto.marketPublished||'—')} ／ 更新 ${hesc(updated)}</span>
    </div>
    <div class="market-metrics">
     <div><span>直近価格</span><b>${yen(m.price)}</b><small>前期間比 ${pct(m.priceChange)}</small></div>
@@ -721,13 +796,34 @@ async function fetchImportSupply(){
  fcAuto.importError=errors.join(' / ');
 }
 async function fetchExternalMarket(){
- const y=new Date().getFullYear(),years=[y-1,y],all=[];let schema='',ok=0;
- for(const yy of years){
-  const url=`https://amiteru-flow-proxy.77hs6mt8h6.workers.dev/market?year=${yy}`;
-  try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);const text=await r.text();const parsed=parseTokyoEucaCsv(text);all.push(...parsed.rows);schema=(parsed.headers||[]).join('|').slice(0,500);ok++}catch(e){if(yy===y)throw e}
+ const now=new Date(), y=now.getFullYear();
+ const meta=await fetchMarketMeta(y);
+ const latestMonth=Number(meta.latestMonth);
+ if(!latestMonth)throw new Error('最新市場月を認識できません');
+
+ const targets=[
+  {year:y,month:latestMonth},
+  {year:latestMonth>1?y:y-1,month:latestMonth>1?latestMonth-1:12},
+  {year:y-1,month:latestMonth}
+ ];
+ const all=[]; let schema='',ok=0,errs=[];
+ for(const t of targets){
+  try{
+   const parsed=await fetchMarketMonth(t.year,t.month);
+   all.push(...parsed.rows); schema+=(schema?'\n':'')+parsed.schema; ok++;
+  }catch(e){errs.push(`${t.year}/${t.month}:${e?.message||e}`)}
  }
- if(!ok||!all.length)throw new Error('ユーカリ市況を取得できません');
- const sig=marketSignalFromRows(all);fcAuto.market=sig;fcAuto.marketStatus='取得済';fcAuto.marketUpdatedAt=new Date().toISOString();fcAuto.marketLastDate=sig.lastDate;fcAuto.marketError='';fcAuto.marketSchema=schema;
+ if(!ok||!all.length)throw new Error(errs.join(' / ')||'ユーカリ市況を取得できません');
+
+ const sig=marketSignalFromRows(all);
+ fcAuto.market=sig;
+ fcAuto.marketStatus='取得済';
+ fcAuto.marketUpdatedAt=new Date().toISOString();
+ fcAuto.marketLastDate=sig.lastDate||`${y}-${String(latestMonth).padStart(2,'0')}-01`;
+ fcAuto.marketError=errs.join(' / ');
+ fcAuto.marketSchema=schema.slice(0,1500);
+ fcAuto.marketSourceMonth=`${meta.latestYear}-${String(meta.latestMonth).padStart(2,'0')}`;
+ fcAuto.marketPublished=meta.published||'';
 }
 function marketDataAgeDays(){if(!fcAuto.marketLastDate)return null;const t=Date.parse(fcAuto.marketLastDate+'T00:00:00+09:00');return Number.isFinite(t)?Math.floor((Date.now()-t)/86400000):null}
 function renderForecastHealth(){

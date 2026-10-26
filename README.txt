@@ -105,3 +105,12 @@ v6.9.10 proxy routing fix
 - Import source checks now treat a successful proxy response as source connectivity.
 - Customs tariff data is no longer misrepresented as actual import-volume statistics.
 - Until real trade-volume data is connected, import pressure remains neutral (0 points).
+
+
+v6.9.11 Tokyo market XLSX integration
+- Reads Worker v2 /market/meta and /market/raw.
+- Fetches latest month, previous month, and prior-year same month.
+- Parses Tokyo flower XLSX in-browser with SheetJS.
+- Extracts eucalyptus rows, preferring Ota Market when a market column exists.
+- Updates recent price/quantity and YoY indicators from actual monthly detail data.
+- Import-volume pressure remains neutral until actual trade-volume statistics are connected.
