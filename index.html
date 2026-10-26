@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#315b43">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="manifest" href="manifest.webmanifest?v=680">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=610">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=590">
 <title>AMITERU FLOW</title>
 <style>
 :root{
@@ -33,7 +35,13 @@ button,.btn{border:0;border-radius:11px;padding:10px 14px;background:var(--accen
 .lib{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px}.v{border:1px solid var(--line);border-radius:14px;padding:9px;background:#fafbf9}.v img{width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:7px}.chip{display:inline-block;background:var(--accent3);border-radius:999px;padding:4px 8px;font-size:11px;margin:2px}.product{border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;background:#fcfdfc}.preview{width:100%;max-width:420px;border-radius:12px;border:1px solid #e2e5e3}
 details{border-top:1px solid var(--line);padding-top:14px}summary{cursor:pointer;color:#3d594a}.tool-head{display:flex;align-items:center;gap:10px;margin-bottom:5px}.tool-index{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--accent3);color:var(--accent);font-size:12px;font-weight:900}
 @media(max-width:440px){main{padding:18px 13px 40px}h1{font-size:27px}.card{padding:16px;border-radius:15px}.nav{margin-left:-2px;margin-right:-2px;top:6px}.saleschart{gap:3px;height:190px}.barwrap{height:145px;width:78%}.sales-table{font-size:12px}.sales-table th,.sales-table td{padding:10px 7px;white-space:nowrap}.sales-table td:nth-child(4){white-space:normal;min-width:120px}.sales-table td:last-child{min-width:190px}.cust-actions{flex-wrap:nowrap}.cust-actions button{font-size:12px;padding:8px 10px}.sample-history{white-space:normal;min-width:180px}}
+
+/* Eucalyptus demand forecast */
+.forecast-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.forecast-cal{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fcfdfc}.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.cal-head b{font-size:17px}.cal-week,.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.cal-week div{text-align:center;font-size:11px;color:var(--muted);font-weight:800;padding:3px}.daycell{min-height:74px;border-radius:10px;padding:6px;border:1px solid transparent;background:#f8faf8;position:relative;overflow:hidden}.daycell.empty{background:transparent}.daycell.weekend{background:#faf8f4}.daycell.auction{cursor:pointer;border-color:#dfe7e1}.daycell.auction:active{transform:scale(.98)}.daynum{font-size:13px;font-weight:850}.rokuyo{font-size:9px;color:var(--muted);margin-top:2px;white-space:nowrap}.auction-label{font-size:9px;font-weight:900;margin-top:4px}.heat-score{font-size:16px;font-weight:900;line-height:1;margin-top:4px}.bridal-badge,.weather-badge{display:inline-block;margin-top:3px;padding:2px 5px;border-radius:999px;background:rgba(255,255,255,.72);font-size:9px;font-weight:800}.weather-badge{margin-left:2px}.forecast-splits{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}.forecast-split{padding:10px;border-radius:11px;background:#fff;border:1px solid #e8ece9}.forecast-split span{display:block;font-size:10px;color:var(--muted)}.forecast-split b{display:block;font-size:20px;margin-top:2px}.forecast-split small{font-size:10px;color:var(--muted)}.heat1{background:#f0f5f1}.heat2{background:#dce9df}.heat3{background:#bfd5c5}.heat4{background:#91b49b;color:#173625}.heat5{background:#557d62;color:#fff}.heat5 .rokuyo,.heat5 .auction-label{color:#e7f0e9}.forecast-legend{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:10px}.heatbox{width:22px;height:12px;border-radius:4px;border:1px solid rgba(0,0,0,.04)}.forecast-detail{margin-top:14px;padding:15px;border-radius:14px;background:#f7f9f7;border:1px solid var(--line)}.factor-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px}.factor{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;background:#fff;border-radius:10px;border:1px solid #e8ece9;font-size:12px}.factor strong{white-space:nowrap}.forecast-note{font-size:12px;color:var(--muted);line-height:1.65}.market-control{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}.market-control select{width:auto;min-width:150px}.holiday-dot{font-size:7px;color:#a24949;margin-left:3px;vertical-align:top}.bridal-editor{display:flex;gap:8px;align-items:center;margin-top:8px}.bridal-editor input{width:90px}.forecast-health{margin:0 0 12px}.source-alert,.source-ok{border-radius:11px;padding:10px 12px;margin:6px 0;font-size:12px;line-height:1.5}.source-alert{background:#fff7e8;border:1px solid #ead6aa;color:#674d16}.source-alert.danger{background:#fff0ef;border-color:#e8b7b2;color:#7a2923}.source-alert b,.source-alert span{display:block}.source-alert span{margin-top:2px}.source-ok{background:#f2f7f3;border:1px solid #d8e5dc;color:#365542}@media(max-width:760px){.forecast-grid{grid-template-columns:1fr}.daycell{min-height:68px;padding:5px}.heat-score{font-size:14px}.factor-list{grid-template-columns:1fr}.forecast-splits{grid-template-columns:1fr 1fr}}@media(max-width:440px){.cal-week,.cal-days{gap:2px}.daycell{min-height:64px;border-radius:8px;padding:4px}.daynum{font-size:12px}.rokuyo,.auction-label,.bridal-badge,.weather-badge{font-size:8px}.forecast-cal{padding:10px}}
+
 .backtop{position:fixed;right:16px;bottom:16px;z-index:60;width:46px;height:46px;border-radius:50%;padding:0;display:grid;place-items:center;background:var(--accent);color:#fff;box-shadow:0 8px 24px rgba(20,35,27,.18);opacity:.92}.backtop:hover{opacity:1}.anchor-spacer{scroll-margin-top:74px}
+.market-comment{margin-top:10px;padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:#f6f8f6;font-size:12px;line-height:1.55}.market-comment b,.market-comment span,.market-comment small{display:block}.market-comment span{margin-top:2px}.market-comment small{margin-top:5px;color:var(--muted)}.market-comment.tight,.market-comment.strong{background:#eef6f0;border-color:#cbded0}.market-comment.glut,.market-comment.weak{background:#fff3ef;border-color:#e8c6bb}
+.tool-icon{display:inline-grid;place-items:center;width:30px;height:30px;border:1px solid #cfb46d;border-radius:9px;background:#fbf6ea;color:#9a742b;font-size:17px;font-weight:900}.harvest-table{width:100%;border-collapse:collapse;margin-top:10px}.harvest-table th,.harvest-table td{padding:8px;border-bottom:1px solid var(--line);text-align:left}.harvest-table input{min-width:70px}.egypt-note{border-left:3px solid #b68a36;background:#fbf6ea;padding:11px 13px;border-radius:10px}.harvest-preview{max-width:340px;width:100%;border-radius:12px;border:1px solid var(--line);display:none;margin-top:10px}
 </style>
 </head>
 <body>
@@ -44,10 +52,10 @@ details{border-top:1px solid var(--line);padding-top:14px}summary{cursor:pointer
     <h1>AMITERU FLOW</h1>
     <div class="brand-sub">販売・顧客・出荷を、ひとつの流れで。</div>
   </div>
-  <div class="top-actions"><span class="badge">v5.5.1</span><span class="state" id="state">Sales & customer intelligence</span></div>
+  <div class="top-actions"><span class="badge">v6.9</span><span class="state" id="state">Sales & customer intelligence</span></div>
 </header>
 <nav class="nav" aria-label="ページ内ナビゲーション">
-  <a href="#salesDashboard">Dashboard</a><a href="#customersArea">Customers</a><a href="#imageLibrary">Images</a><a href="#shippingTools">Shipping</a><a href="#mailTools">Mail</a>
+  <a href="#salesDashboard">Dashboard</a><a href="#harvestScan">Harvest Scan</a><a href="#eucaForecast">𓂀 All-Seeing Eye</a><a href="#customersArea">Customers</a><a href="#imageLibrary">Images</a><a href="#shippingTools">Shipping</a><a href="#mailTools">Mail</a>
 </nav>
 
 
@@ -73,6 +81,27 @@ details{border-top:1px solid var(--line);padding-top:14px}summary{cursor:pointer
 <div class="scrollx" style="margin-top:8px"><table class="sales-table"><thead><tr><th>買参番号</th><th>購入</th><th>累計</th><th>品目</th><th>最終購入</th><th>対応</th></tr></thead><tbody id="customerTable"></tbody></table></div>
 <div class="small" style="margin-top:8px">新しいCSVを入れると、買参番号で自動照合して購入回数・累計売上・最終購入日・購入品目を更新します。新規の買参番号は自動で新規顧客として追加されます。サンプル回数・サンプル履歴・メモはそのまま残ります。</div>
 <details style="margin-top:12px"><summary><b>出荷履歴を見る</b></summary><div class="scrollx" style="margin-top:8px"><table class="sales-table"><thead><tr><th>日付</th><th>販売</th><th>品目</th><th>品種</th><th>長さ</th><th>本数</th><th>単価</th><th>金額</th><th>買参</th></tr></thead><tbody id="salesHistory"></tbody></table></div></details>
+</section>
+
+
+<section class="card anchor-spacer" id="harvestScan">
+<div class="tool-head"><span class="tool-icon">◎</span><div><div class="section-kicker">Harvest Scan</div><h2 style="margin:0">Harvest Scan｜収穫集計</h2></div></div>
+<div class="small">ボードに品種名を書き、10本ごとにマグネットを1個置いて撮影。マグネット数×10＋端数で集計し、チャッピーに相談して箱組みを調整してから送り状へ進みます。</div>
+<div class="grid2" style="margin-top:12px">
+ <div><div class="field"><label>ボード写真</label><input id="harvestPhoto" type="file" accept="image/*" capture="environment"></div><img id="harvestPreview" class="harvest-preview" alt="Harvest Scan撮影画像"></div>
+ <div class="egypt-note small"><b>撮影ルール</b><br>品種名をはっきり記入／10本ごとに同じマグネット1個／端数は右側に残す。AI相談用の写真と集計テキストを一緒に共有できます。</div>
+</div>
+<div class="scrollx"><table class="harvest-table"><thead><tr><th>品種</th><th>長さ</th><th>マグネット</th><th>端数</th><th>合計</th><th></th></tr></thead><tbody id="harvestRows"></tbody></table></div>
+<div class="row" style="margin-top:10px"><button id="addHarvestRow" class="light" type="button">＋ 行を追加</button><button id="harvestToChat" type="button">チャッピーに相談</button><button id="harvestToShipping" class="light" type="button">送り状へ移動</button></div>
+<textarea id="harvestSummary" style="margin-top:10px" placeholder="集計結果がここに出ます"></textarea>
+<div class="small">※写真からの完全自動認識はまだ確定処理にせず、会話で確認・修正してから送り状に反映する設計です。</div>
+</section>
+
+<section class="card anchor-spacer" id="eucaForecast">
+<div class="sectionhead"><div><div class="section-kicker">Eucalyptus demand forecast</div><h2>𓂀 All-Seeing Eye｜ユーカリ引き合い予測</h2><div class="small">火・木・日のセリ日ベース。濃いほど引き合いが強い予測です。関東7都県の天気・祝日・連休を自動取得し、婚礼・物日需要も自動推定し、東京都中央卸売市場の日報からユーカリ市況も自動反映します。外部情報は6時間キャッシュし、取得失敗時は前回データを使います。入力は不要です。</div></div></div>
+<div id="forecastAutoStatus" class="small" style="margin:-2px 0 8px;color:var(--muted)">自動データを更新中…</div><div id="forecastHealth" class="forecast-health"></div><div id="forecastCalendars" class="forecast-grid"></div>
+<div class="forecast-legend"><span>弱い</span><i class="heatbox heat1"></i><i class="heatbox heat2"></i><i class="heatbox heat3"></i><i class="heatbox heat4"></i><i class="heatbox heat5"></i><span>強い</span><span>・ 予測はユーカリ専用</span></div>
+<div id="forecastDetail" class="forecast-detail"><div class="small">セリ日をタップすると、ブライダル・小売り・サイズ別の予測内訳を表示します。</div></div>
 </section>
 
 <section class="card anchor-spacer" id="imageLibrary">
@@ -143,9 +172,10 @@ details{border-top:1px solid var(--line);padding-top:14px}summary{cursor:pointer
 
 <button id="backTop" class="backtop" type="button" aria-label="ページ上部へ戻る" title="上へ戻る">↑</button>
 <canvas id="cv" hidden></canvas>
-<script src="sales_seed.js?v=551"></script>
-<script src="dashboard.js?v=551"></script>
-<script src="app.js?v=551"></script>
+<script src="sales_seed.js?v=690"></script>
+<script src="dashboard.js?v=690"></script>
+<script src="harvest.js?v=690"></script>
+<script src="app.js?v=690"></script>
 <script>
 (()=>{const b=document.getElementById("backTop");if(!b)return;b.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));const toggle=()=>{b.style.display=window.scrollY>500?"grid":"none"};window.addEventListener("scroll",toggle,{passive:true});toggle();})();
 </script>
