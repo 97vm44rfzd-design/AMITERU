@@ -687,23 +687,43 @@ async function fetchAutoHolidays(){
 }
 async function fetchImportSupply(){
  const urls=[
-  'https://amiteru-flow-proxy.77hs6mt8h6.workers.dev/import/pps',
-  'https://amiteru-flow-proxy.77hs6mt8h6.workers.dev/import/customs'
+  {name:'植物防疫統計',url:AMITERU_PROXY+'/import/pps'},
+  {name:'税関0604.20',url:AMITERU_PROXY+'/import/customs'}
  ];
- let ok=0,notes=[];
- for(const url of urls){try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);const t=await r.text();if(/輸入検査|0604\.20|生鮮のもの/.test(t)){ok++;notes.push(url.includes('pps.maff')?'植物防疫統計':'貿易統計0604.20')}}catch(e){}}
- if(!ok)throw new Error('輸入統計ソースへ接続できません');
- // ブラウザから直接取得できる公式ページでは、ユーカリ単独の週次数量を安定して機械抽出できない場合がある。
- // 数量が取得できない時は、誤った推定値を作らず中立(0点)に保つ。
+ let ok=0,notes=[],errors=[];
+ for(const src of urls){
+  try{
+   const r=await fetch(src.url,{cache:'no-store'});
+   if(!r.ok)throw new Error(`HTTP ${r.status}`);
+   const t=await r.text();
+   if(t&&t.length>20){ok++;notes.push(src.name)}
+  }catch(e){errors.push(`${src.name}:${e?.message||e}`)}
+ }
+ if(!ok)throw new Error(errors.join(' / ')||'輸入関連ソースへ接続できません');
+ // 現在のWorkerは「公式ソースに接続できる」ことを確認する段階。
+ // 税関の関税率表は数量実績そのものではないため、数量推定は作らず中立にする。
  const prev=fcAuto.importSupply||{};
- if(Number.isFinite(Number(prev.yoyQty))){const y=Number(prev.yoyQty);fcAuto.importSupply={...prev,score:importPressureFromYoY(y),label:`輸入前年差 ${y>=0?'+':''}${Math.round(y*100)}%`,comment:importSupplyComment(y),sourceReady:true};fcAuto.importStatus='取得済'}
- else {fcAuto.importSupply={score:0,label:`${notes.join('・')}確認済`,comment:'公式ソースは確認できていますが、ユーカリ単独の数量を自動抽出できないため中立扱いです。',yoyQty:null,sourceReady:true};fcAuto.importStatus='ソース確認済'}
- fcAuto.importUpdatedAt=new Date().toISOString();fcAuto.importError='';
+ if(Number.isFinite(Number(prev.yoyQty))){
+  const y=Number(prev.yoyQty);
+  fcAuto.importSupply={...prev,score:importPressureFromYoY(y),label:`輸入前年差 ${y>=0?'+':''}${Math.round(y*100)}%`,comment:importSupplyComment(y),sourceReady:true};
+  fcAuto.importStatus='取得済';
+ } else {
+  fcAuto.importSupply={
+   score:0,
+   label:`Proxy接続確認：${notes.join('・')}`,
+   comment:'公式ソースへの中継は成功しています。輸入数量の実績統計はまだ自動取得していないため、海外供給補正は中立(0点)です。',
+   yoyQty:null,
+   sourceReady:true
+  };
+  fcAuto.importStatus='Proxy接続済';
+ }
+ fcAuto.importUpdatedAt=new Date().toISOString();
+ fcAuto.importError=errors.join(' / ');
 }
 async function fetchExternalMarket(){
  const y=new Date().getFullYear(),years=[y-1,y],all=[];let schema='',ok=0;
  for(const yy of years){
-  const url=`https://www.opendata.metro.tokyo.lg.jp/shijyou/${yy}/result_price_flower.csv`;
+  const url=`https://amiteru-flow-proxy.77hs6mt8h6.workers.dev/market?year=${yy}`;
   try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`HTTP ${r.status}`);const text=await r.text();const parsed=parseTokyoEucaCsv(text);all.push(...parsed.rows);schema=(parsed.headers||[]).join('|').slice(0,500);ok++}catch(e){if(yy===y)throw e}
  }
  if(!ok||!all.length)throw new Error('ユーカリ市況を取得できません');
@@ -712,12 +732,12 @@ async function fetchExternalMarket(){
 function marketDataAgeDays(){if(!fcAuto.marketLastDate)return null;const t=Date.parse(fcAuto.marketLastDate+'T00:00:00+09:00');return Number.isFinite(t)?Math.floor((Date.now()-t)/86400000):null}
 function renderForecastHealth(){
  const el=D('forecastHealth');if(!el)return;const msgs=[];const age=marketDataAgeDays();
- if(fcAuto.marketStatus==='取得失敗')msgs.push({type:'warn',title:'外部市況：AMITERU Proxy経由',body:`東京都中央卸売市場は端末・ブラウザの制限で直接取得できない場合があります。${fcAuto.marketError?` ${fcAuto.marketError}`:''} カレンダーは前回データまたは季節平均で継続します。`});
+ if(fcAuto.marketStatus==='取得失敗')msgs.push({type:'warn',title:'外部市況：Proxy中継エラー',body:`AMITERU Proxy経由で市場データを取得できませんでした。${fcAuto.marketError?` ${fcAuto.marketError}`:''} カレンダーは前回データまたは季節平均で継続します。`});
  if(fcAuto.marketStatus==='形式変更')msgs.push({type:'danger',title:'外部データ形式が変わった可能性があります',body:'ユーカリ行を認識できません。AMITERU FLOWの更新が必要な可能性があります。'});
  if(age!=null&&age>21)msgs.push({type:'warn',title:'外部市況の更新が止まっている可能性があります',body:`大田市場のユーカリ最終認識日は ${fcAuto.marketLastDate} です。リンク切れ・掲載休止・ユーカリ取引なしのいずれかを確認してください。`});
  if(fcAuto.weatherStatus==='取得失敗')msgs.push({type:'warn',title:'関東天気を取得できません',body:'前回キャッシュまたは天気中立で予測しています。'});
  if(fcAuto.producerWeatherStatus==='取得失敗')msgs.push({type:'warn',title:'主要産地の天気を取得できません',body:'外部市況の数量変化は産地天気補正なしで評価しています。'});
- if(fcAuto.importStatus==='取得失敗')msgs.push({type:'warn',title:'輸入統計：AMITERU Proxy経由',body:`公式サイトは端末・ブラウザの制限で直接取得できない場合があります。海外供給は中立(0点)で予測を継続します。${fcAuto.importError?` ${fcAuto.importError}`:''}`});
+ if(fcAuto.importStatus==='取得失敗')msgs.push({type:'warn',title:'輸入関連ソース：Proxy中継エラー',body:`AMITERU Proxy経由で公式ソースへ接続できません。海外供給は中立(0点)で予測を継続します。${fcAuto.importError?` ${fcAuto.importError}`:''}`});
  if(fcAuto.importStatus==='ソース確認済')msgs.push({type:'warn',title:'輸入統計は補助情報として待機中',body:'公式統計ソースへの接続は確認済みですが、ユーカリ単独の数量をブラウザから安定抽出できないため、現在は0点（中立）です。誤った数量で相場判断しないための安全策です。'});
  if(!msgs.length){el.innerHTML='<div class="source-ok">自動データ正常：関東天気・主要産地天気・祝日・外部市況・輸入供給の取得状態に問題はありません。</div>';return}
  el.innerHTML=msgs.map(m=>`<div class="source-alert ${m.type}"><b>${m.title}</b><span>${m.body}</span></div>`).join('');

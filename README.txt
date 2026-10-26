@@ -98,3 +98,10 @@ v6.9.9 Cloudflare Worker proxy
   https://amiteru-flow-proxy.77hs6mt8h6.workers.dev/import/customs
 - This avoids browser CORS restrictions that caused Failed to fetch in the local ZIP/PWA.
 - PWA cache bumped to v699.
+
+
+v6.9.10 proxy routing fix
+- Fixed a missed direct Tokyo Market URL: market data now actually uses https://amiteru-flow-proxy.77hs6mt8h6.workers.dev/market?year=YYYY.
+- Import source checks now treat a successful proxy response as source connectivity.
+- Customs tariff data is no longer misrepresented as actual import-volume statistics.
+- Until real trade-volume data is connected, import pressure remains neutral (0 points).
