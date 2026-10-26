@@ -5,49 +5,75 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#315b43">
 <link rel="manifest" href="manifest.webmanifest">
-<title>あみてる出荷画像 v4.9</title>
+<title>AMITERU FLOW</title>
 <style>
-:root{--g:#315b43;--bg:#f4f6f2;--line:#d6ddd6;--muted:#697169;--red:#a64b4b}
+:root{
+  --ink:#18221d;--muted:#758079;--bg:#f6f7f5;--surface:#ffffff;--line:#e5e9e6;
+  --accent:#244f3b;--accent2:#dfe9e3;--accent3:#eef4f0;--danger:#9a4343;--warm:#f5efe2;
+  --radius:18px;--shadow:0 1px 2px rgba(20,35,27,.035),0 10px 30px rgba(20,35,27,.035)
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:#202520}
-main{max-width:860px;margin:auto;padding:16px}
-h1{margin:0;font-size:27px}
-.top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 12px}
-.badge{background:var(--g);color:white;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700}
-.state{background:#e8efe9;border-radius:999px;padding:5px 10px;font-size:12px}
-.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0}
-h2{font-size:18px;margin:0 0 12px} h3{font-size:15px;margin:14px 0 8px}
-.small{font-size:12px;color:var(--muted);line-height:1.6}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:720px){.grid2{grid-template-columns:1fr}}
-input,select,textarea,button,a{font:inherit}
-input[type=text],input[type=email],input[type=date],select,textarea{width:100%;padding:10px;border:1px solid #c9d0c9;border-radius:10px;background:#fff}
-textarea{min-height:105px}
-button,.btn{border:0;border-radius:11px;padding:10px 14px;background:var(--g);color:#fff;font-weight:700;text-decoration:none;display:inline-block;cursor:pointer}
-.light{background:#e8efe9;color:#294331}.gray{background:#6f776f}.red{background:var(--red)}
-.field{margin:9px 0}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:4px}
-.lib{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
-.v{border:1px solid var(--line);border-radius:12px;padding:8px}.v img{width:100%;height:120px;object-fit:cover;border-radius:8px}
-.chip{display:inline-block;background:#edf3ee;border-radius:999px;padding:4px 8px;font-size:11px;margin:2px}
-.warn{display:inline-block;background:#fff0f0;color:#8f3737;border:1px solid #efc8c8;border-radius:999px;padding:4px 8px;font-size:11px;margin:2px}
-.product{border:1px solid var(--line);border-radius:12px;padding:10px;margin:9px 0}
-.preview{width:100%;max-width:420px;border-radius:10px;border:1px solid #ddd}
-.note{background:#f7faf7;border-radius:10px;padding:9px}
-hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:var(--ink);letter-spacing:.01em}
+main{max-width:1040px;margin:auto;padding:28px 22px 56px}
+.brandbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;margin-bottom:22px}
+.brandeyebrow{font-size:11px;letter-spacing:.18em;color:var(--muted);font-weight:800;text-transform:uppercase;margin-bottom:5px}
+h1{margin:0;font-size:31px;line-height:1.05;letter-spacing:-.025em}.brand-sub{font-size:13px;color:var(--muted);margin-top:7px}
+.top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.badge{background:var(--accent);color:#fff;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}.state{background:var(--accent3);color:#385646;border:1px solid #dde8e1;border-radius:999px;padding:6px 10px;font-size:11px}
+.nav{display:flex;gap:5px;overflow:auto;padding:5px;background:#edf0ed;border-radius:14px;margin:0 0 20px}.nav a{white-space:nowrap;color:#536059;text-decoration:none;font-size:12px;font-weight:750;padding:8px 11px;border-radius:10px}.nav a:hover{background:#fff;color:var(--ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin:16px 0;box-shadow:var(--shadow)}
+.hero-card{padding:24px}.sectionhead{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.section-kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#789084;font-weight:800;margin-bottom:4px}
+h2{font-size:20px;letter-spacing:-.01em;margin:0 0 12px}h3{font-size:14px;margin:20px 0 9px}.small{font-size:12px;color:var(--muted);line-height:1.65}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.subgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:760px){.grid2,.subgrid{grid-template-columns:1fr}.brandbar{align-items:flex-start;flex-direction:column}.top-actions{justify-content:flex-start}}
+input,select,textarea,button,a{font:inherit}input[type=text],input[type=email],input[type=date],select,textarea{width:100%;padding:11px 12px;border:1px solid #d9dfdb;border-radius:11px;background:#fff;color:var(--ink);outline:none}input:focus,select:focus,textarea:focus{border-color:#7fa38e;box-shadow:0 0 0 3px rgba(36,79,59,.08)}textarea{min-height:105px}
+button,.btn{border:0;border-radius:11px;padding:10px 14px;background:var(--accent);color:#fff;font-weight:750;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;min-height:40px}.light{background:var(--accent3);color:#315541}.gray{background:#727c76}.red{background:var(--danger)}
+.field{margin:10px 0}.field label{display:block;font-size:11px;font-weight:800;color:#59665f;margin-bottom:5px}.note{background:#f7f8f6;border:1px solid #edf0ed;border-radius:13px;padding:13px}.note b{color:var(--ink)}hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0 22px}.kpi{background:#fafbf9;border:1px solid #edf0ed;border-radius:14px;padding:14px 15px;min-width:0}.kpi b{display:block;font-size:25px;line-height:1.1;margin:6px 0 5px;letter-spacing:-.03em}.kpi span{font-size:10px;color:var(--muted);font-weight:650}@media(max-width:650px){.kpis{grid-template-columns:1fr 1fr}.kpi b{font-size:21px}}
+.analytics-block{border-top:1px solid var(--line);padding-top:18px}.saleschart{display:grid;grid-template-columns:repeat(12,minmax(24px,1fr));gap:7px;align-items:end;height:220px;border-bottom:1px solid var(--line);padding:10px 4px 0;margin-top:8px}.monthcol{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-width:0}.barwrap{width:72%;height:170px;display:flex;flex-direction:column-reverse;justify-content:flex-start;border-radius:6px 6px 2px 2px;overflow:hidden}.seg{width:100%;min-height:0}.mlabel{font-size:10px;color:var(--muted);margin-top:6px}.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:10px;color:#667169}.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.insight{min-height:102px}.sales-table{width:100%;border-collapse:collapse;font-size:12px}.sales-table th,.sales-table td{padding:11px 8px;border-bottom:1px solid #edf0ed;text-align:left;vertical-align:top}.sales-table th{color:var(--muted);font-size:10px;letter-spacing:.04em;text-transform:uppercase}.sales-table tbody tr:hover{background:#fafbf9}.scrollx{overflow-x:auto}.tag{display:inline-block;border:1px solid #e1e7e3;border-radius:999px;padding:3px 7px;font-size:9px;margin:2px 2px 0 0;background:#fff;color:#526058}.tag.good{background:#edf5ef;border-color:#dcebdd;color:#385d44}.tag.hot{background:#f8f1df;border-color:#efe2be;color:#755f2f}.tag.new{background:#eef3f6;border-color:#dce6ec;color:#456070}.warn{display:inline-block;background:#fff1f1;color:#8f3737;border:1px solid #efc8c8;border-radius:999px;padding:4px 8px;font-size:10px;margin:2px}.cust-actions{display:flex;gap:5px;flex-wrap:wrap}.cust-actions button{padding:6px 8px;min-height:30px;font-size:10px}.mini{font-size:10px;color:var(--muted);margin-top:5px}
+.lib{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px}.v{border:1px solid var(--line);border-radius:14px;padding:9px;background:#fafbf9}.v img{width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:7px}.chip{display:inline-block;background:var(--accent3);border-radius:999px;padding:4px 8px;font-size:10px;margin:2px}.product{border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;background:#fcfdfc}.preview{width:100%;max-width:420px;border-radius:12px;border:1px solid #e2e5e3}
+details{border-top:1px solid var(--line);padding-top:14px}summary{cursor:pointer;color:#3d594a}.tool-head{display:flex;align-items:center;gap:10px;margin-bottom:5px}.tool-index{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--accent3);color:var(--accent);font-size:12px;font-weight:900}
+@media(max-width:440px){main{padding:18px 13px 40px}h1{font-size:27px}.card{padding:16px;border-radius:15px}.nav{margin-left:-2px;margin-right:-2px}.saleschart{gap:3px;height:190px}.barwrap{height:145px;width:78%}}
 </style>
 </head>
 <body>
 <main>
-<h1>あみてる出荷画像</h1>
-<div class="top">
-  <span class="badge">v4.9</span>
-  <span class="state" id="state">最新版・Outlook本文修正版</span>
-</div>
-<div class="small">メール定型を保持しつつ、CSVからユーカリ画像を自動生成します。</div>
+<header class="brandbar">
+  <div>
+    <div class="brandeyebrow">Farm sales & shipping manager</div>
+    <h1>AMITERU FLOW</h1>
+    <div class="brand-sub">販売・顧客・出荷を、ひとつの流れで。</div>
+  </div>
+  <div class="top-actions"><span class="badge">v5.1</span><span class="state" id="state">Sales & customer intelligence</span></div>
+</header>
+<nav class="nav" aria-label="ページ内ナビゲーション">
+  <a href="#salesDashboard">Dashboard</a><a href="#customersArea">Customers</a><a href="#imageLibrary">Images</a><a href="#shippingTools">Shipping</a><a href="#mailTools">Mail</a>
+</nav>
 
-<section class="card">
-<h2>1. 品種画像ライブラリ</h2>
+
+<section class="card hero-card" id="salesDashboard">
+<div class="sectionhead"><div><div class="section-kicker">Overview</div><h2>販売ダッシュボード</h2><div class="small">売上と顧客の動きを、今の状態だけ素早く確認。</div></div><div class="row"><label class="btn">売立CSVを追加<input id="salesCsvFile" type="file" accept=".csv,text/csv" multiple hidden></label><button class="light" id="importSalesCsv">取込</button></div></div>
+<div id="salesImportStatus" class="small">2024〜2026年の過去データを初期登録します。今後は売立CSVを追加するだけです。</div>
+<div class="kpis">
+ <div class="kpi"><span>今月売上</span><b id="kpiMonth">—</b><span id="kpiMonthSub">—</span></div>
+ <div class="kpi"><span>前月比</span><b id="kpiMoM">—</b><span id="kpiPrev">—</span></div>
+ <div class="kpi"><span>前年同月比</span><b id="kpiYoY">—</b><span id="kpiYoYSub">—</span></div>
+ <div class="kpi"><span>リピーター率</span><b id="kpiRepeat">—</b><span id="kpiRepeatSub">—</span></div>
+</div>
+<div class="field"><label>表示年</label><select id="salesYear"></select></div>
+<div class="analytics-block"><div class="sectionhead"><div><div class="section-kicker">Sales trend</div><h3 style="margin:0">月別売上</h3></div></div><div id="salesChart" class="saleschart"></div><div id="salesLegend" class="legend"></div></div>
+<div class="subgrid">
+ <div><h3>今回の売立</h3><div id="latestSaleSummary" class="note small insight">CSVを追加すると、新規・リピーターをここに表示します。</div></div>
+ <div><h3>注目顧客</h3><div id="customerHighlights" class="note small insight">購入履歴から自動抽出します。</div></div>
+</div>
+<div id="customersArea"></div><div class="section-kicker" style="margin-top:22px">Customer intelligence</div><h3 style="margin-top:4px">リピーター・顧客管理</h3>
+<div class="row"><select id="customerFilter" style="max-width:190px"><option value="all">すべて</option><option value="repeat">リピーター</option><option value="sample">サンプル候補</option><option value="multi">複数品目購入</option></select><input id="customerSearch" type="text" placeholder="買参番号で検索" style="max-width:220px"></div>
+<div class="scrollx" style="margin-top:8px"><table class="sales-table"><thead><tr><th>買参番号</th><th>購入</th><th>累計</th><th>品目</th><th>最終購入</th><th>対応</th></tr></thead><tbody id="customerTable"></tbody></table></div>
+<div class="small" style="margin-top:8px">「サンプル済み」「メッセージ済み」は端末に記録されます。次回CSV取込後も残ります。</div>
+<details style="margin-top:12px"><summary><b>出荷履歴を見る</b></summary><div class="scrollx" style="margin-top:8px"><table class="sales-table"><thead><tr><th>日付</th><th>販売</th><th>品目</th><th>品種</th><th>長さ</th><th>本数</th><th>単価</th><th>金額</th><th>買参</th></tr></thead><tbody id="salesHistory"></tbody></table></div></details>
+</section>
+
+<section class="card" id="imageLibrary">
+<div class="tool-head"><span class="tool-index">01</span><div><div class="section-kicker">Image library</div><h2 style="margin:0">品種画像ライブラリ</h2></div></div>
 <div class="grid2">
   <div>
     <div class="field"><label>正式名</label><input id="vname" type="text" placeholder="例：ゴニオカリックス"></div>
@@ -62,8 +88,8 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 <div id="library" class="lib" style="margin-top:12px"></div>
 </section>
 
-<section class="card">
-<h2>2. 送り状CSV → ミックス画像</h2>
+<section class="card" id="shippingTools">
+<div class="tool-head"><span class="tool-index">02</span><div><div class="section-kicker">Shipping tools</div><h2 style="margin:0">送り状CSV → ミックス画像</h2></div></div>
 <div class="row">
   <label class="btn">CSVを選ぶ<input id="csvFile" type="file" accept=".csv,text/csv" hidden></label>
   <button id="parseCsv">CSV読込</button>
@@ -84,8 +110,8 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 </div>
 </section>
 
-<section class="card">
-<h2>3. 送り状メール</h2>
+<section class="card" id="mailTools">
+<div class="tool-head"><span class="tool-index">03</span><div><div class="section-kicker">Mail workflow</div><h2 style="margin:0">送り状メール</h2></div></div>
 <div class="small">ここで登録した送信先・件名・本文は端末に保存され、次回も残ります。</div>
 
 <div class="field"><label>送信先名</label><input id="mailName" type="text" placeholder="例：オークネット"></div>
@@ -113,7 +139,9 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 </section>
 
 <canvas id="cv" hidden></canvas>
-<script src="app.js?v=49"></script>
+<script src="sales_seed.js?v=51"></script>
+<script src="dashboard.js?v=51"></script>
+<script src="app.js?v=51"></script>
 </main>
 </body>
 </html>
