@@ -85,7 +85,9 @@ async function refreshSalesUI(){
  allSales=await getAll('sales'); const metas=await getAll('customerMeta'); customerMeta=new Map(metas.map(x=>[x.buyer,x]));
  const years=[...new Set(allSales.map(r=>r.date.slice(0,4)))].sort((a,b)=>b-a); const sel=D('salesYear'), prev=sel.value; sel.innerHTML=years.map(y=>`<option value="${y}">${y}年</option>`).join('');
  const nowY=String(new Date().getFullYear()); sel.value=years.includes(prev)?prev:(years.includes(nowY)?nowY:(years[0]||''));
- renderKpis();renderYearTotals();renderChart();renderLatest();renderCustomers();renderHistory();initForecast();
+ renderKpis();renderYearTotals();renderChart();renderLatest();renderCustomers();renderHistory();
+ // 売立DB読込後、実績学習を反映して予測を再描画
+ try{renderForecastCalendars()}catch(e){console.error('forecast rerender',e)}
 }
 
 function renderYearTotals(){
@@ -524,7 +526,24 @@ async function refreshForecastExternal(force=false){
  if(fcAuto.weatherStatus==='取得済'||fcAuto.producerWeatherStatus==='取得済'||fcAuto.holidayStatus==='取得済'||fcAuto.marketStatus==='取得済'||fcAuto.importStatus==='取得済'||fcAuto.importStatus==='ソース確認済'||hadWeather||hadProducerWeather||hadHolidays||hadMarket||hadImport)fcAuto.updatedAt=new Date().toISOString();
  fcAutoSave();renderForecastCalendars();
 }
-function initForecast(){if(!D('forecastCalendars'))return;fcAutoLoad();renderForecastCalendars();refreshForecastExternal(false)}
+function initForecast(){
+ const root=D('forecastCalendars');if(!root)return;
+ try{
+  fcAutoLoad();
+  renderForecastCalendars();
+  // 外部データ取得は失敗してもカレンダー表示を消さない
+  refreshForecastExternal(false).catch(e=>{
+   console.error('forecast external',e);
+   const st=D('forecastAutoStatus');
+   if(st)st.textContent='カレンダーは表示中／外部データ更新で一部エラー';
+  });
+ }catch(e){
+  console.error('forecast init',e);
+  root.innerHTML='<div class="source-alert danger"><b>予測カレンダー初期化エラー</b><span>再読み込みしてください。販売DBとは独立して復旧できるよう修正済みです。</span></div>';
+ }
+}
 
+// 販売DBの起動を待たず、需要予測カレンダーを先に描画する
+initForecast();
 
 })();

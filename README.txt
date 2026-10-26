@@ -18,3 +18,11 @@ Demand forecast fixes:
 Existing v6.8 forecast engine remains in place:
 weather, holidays, bridal/events, Tokyo market signal, producer weather,
 import signal, historical sales learning, confidence/range, length forecasts.
+
+
+v6.9.1 calendar fix
+- Demand forecast calendar initialization is now independent from IndexedDB/sales DB.
+- Calendar renders immediately when the page loads.
+- After sales DB finishes loading, forecasts are re-rendered with historical sales learning.
+- External API failures no longer prevent the calendar itself from appearing.
+- PWA cache bumped to v691.
