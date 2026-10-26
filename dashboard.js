@@ -202,9 +202,16 @@ function buyerClosingTarget(d){
  return day<=15?new Date(y,m,15):new Date(y,m+1,0);
 }
 function buyerClosingBaseFactor(d){
- const target=buyerClosingTarget(d);let auctions=[];
- for(let x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x<=target;x=addDays(x,1))if(isAuctionDay(x))auctions.push(new Date(x));
- const rank=auctions.findIndex(x=>dateKey(x)===dateKey(d))+1;
+ const target=buyerClosingTarget(d);
+ // 締め日までに残っているセリ日を列挙し、締め日に近い順で順位を付ける。
+ // 旧実装は「現在日から列挙した配列の先頭」を直前扱いしていたため、
+ // ほぼ全セリ日が -4 点になる不具合があった。
+ let auctions=[];
+ const start=addDays(target,-14);
+ for(let x=start;x<=target;x=addDays(x,1))if(isAuctionDay(x))auctions.push(new Date(x));
+ auctions=auctions.sort((a,b)=>b-a); // 締め日に近い順
+ const idx=auctions.findIndex(x=>dateKey(x)===dateKey(d));
+ const rank=idx>=0?idx+1:0;
  const days=Math.round((target-d)/86400000);
  if(rank===1)return {score:-4,rank:1,days,label:`買参人締め直前（${target.getDate()}日締め）`};
  if(rank===2)return {score:-2,rank:2,days,label:`買参人締め2回前（${target.getDate()}日締め）`};
@@ -317,7 +324,7 @@ const EVENT_LENGTH_PREF={
 function lengthBucket(v){const n=Number(String(v||'').replace(/[^0-9.]/g,''));if(!n)return null;if(n<=45)return 40;if(n<=55)return 50;if(n<=65)return 60;return 70}
 function historicalLengthFactor(d,cm){
  const e=allSales.filter(isEuca).filter(r=>lengthBucket(r.length)===cm);if(!e.length)return {score:0,label:'長さ実績なし'};
- const m=d.getMonth()+1,dow=d.getDay(),samples=e.filter(r=>{const rd=parseDateKey(r.date);if(!rd)return false;const md=Math.abs((rd.getMonth()+1)-m);return (md===0||md===1||md===11)&&rd.getDay()===dow});
+ const m=d.getMonth()+1,dow=d.getDay(),samples=e.filter(r=>{const raw=parseDateKey(r.date);if(!raw)return false;const rd=saleToAuctionDate(r.date);const md=Math.abs((rd.getMonth()+1)-m);return (md===0||md===1||md===11)&&rd.getDay()===dow});
  if(samples.length<2)return {score:0,label:'長さ実績少'};
  const qty=samples.reduce((a,r)=>a+(Number(r.qty)||0),0),avgQty=qty/samples.length;
  const allSame=e.filter(r=>{const rd=parseDateKey(r.date);return rd&&rd.getDay()===dow});const base=allSame.length?allSame.reduce((a,r)=>a+(Number(r.qty)||0),0)/allSame.length:avgQty;
@@ -414,7 +421,10 @@ function forecastConfidence(d,fc){
 function forecastRange(score,confidence){const half=Math.round(6+(100-confidence)*.16);return [clamp(score-half,5,98),clamp(score+half,5,98)]}
 function forecastFor(d){
  const h=historicalFactor(d),b=bridalPotentialForAuction(d),r=retailPotentialForAuction(d),s=seasonFactor(d),w=auctionWeekdayFactor(d),o=otherMarketFactor(d),imp=importSupplyFactor(),hp=longHolidayPenalty(d),ev=seasonalEventFactorForAuction(d),settle=buyerClosingFactor(d);
- const learnBias=learningBias();let score=10+h.score+b.score+Math.round(r.score*.55)+Math.round(w.score*.45)+o.score+hp+ev.score+settle.score+learnBias;score=clamp(score,5,98);
+ const learnBias=learningBias();
+ // v6.9: 海外供給シグナルも最終需要スコアへ反映。
+ let score=10+h.score+b.score+Math.round(r.score*.55)+Math.round(w.score*.45)+o.score+imp.score+hp+ev.score+settle.score+learnBias;
+ score=clamp(score,5,98);
  const bridalIndex=clamp(30+b.score*2+w.score+s.score+hp*.4+ev.score*.25,5,98);
  const retailIndex=clamp(28+r.score*1.5+h.score*.35+o.score*.4+hp*.7,5,98);
  const shortIndex=clamp(score*.35+bridalIndex*.55+retailIndex*.10,5,98);

@@ -1,8 +1,20 @@
-AMITERU FLOW v6.9
-- v6.8を正本として更新
-- 既存のユーカリ引き合い予測ロジックを保持
-- 表示名を All-Seeing Eye｜ユーカリ引き合い予測 に変更
-- Harvest Scan｜収穫集計を追加
-- 10本=マグネット1個＋端数で集計
-- 写真＋集計を共有してチャッピーに相談する導線を追加
-- 送り状機能・販売DB・顧客分析・画像ライブラリは継承
+AMITERU FLOW v6.9 FIXED
+Based directly on v6.8.
+
+Added:
+- Harvest Scan
+- All-Seeing Eye naming/UI
+- ChatGPT consultation flow
+
+Demand forecast fixes:
+1. Buyer closing-date correction:
+   Only the last auction before the 15th/month-end is -4,
+   and the second-last is -2.
+2. Import-supply signal is now actually included in the final forecast score.
+3. Length-specific historical learning now uses the same auction-date correction
+   as the overall forecast.
+4. PWA service-worker/cache version updated to v690 to prevent stale forecast files.
+
+Existing v6.8 forecast engine remains in place:
+weather, holidays, bridal/events, Tokyo market signal, producer weather,
+import signal, historical sales learning, confidence/range, length forecasts.
