@@ -82,7 +82,18 @@ async function refreshSalesUI(){
  allSales=await getAll('sales'); const metas=await getAll('customerMeta'); customerMeta=new Map(metas.map(x=>[x.buyer,x]));
  const years=[...new Set(allSales.map(r=>r.date.slice(0,4)))].sort((a,b)=>b-a); const sel=D('salesYear'), prev=sel.value; sel.innerHTML=years.map(y=>`<option value="${y}">${y}年</option>`).join('');
  const nowY=String(new Date().getFullYear()); sel.value=years.includes(prev)?prev:(years.includes(nowY)?nowY:(years[0]||''));
- renderKpis();renderChart();renderLatest();renderCustomers();renderHistory();
+ renderKpis();renderYearTotals();renderChart();renderLatest();renderCustomers();renderHistory();
+}
+
+function renderYearTotals(){
+ const years=[...new Set(allSales.map(r=>r.date.slice(0,4)))].filter(Boolean).sort();
+ const el=D('yearTotals'); if(!el)return;
+ el.innerHTML=years.map(y=>{
+   const rows=allSales.filter(r=>r.date.startsWith(y));
+   const total=rows.reduce((a,r)=>a+r.amount,0);
+   const dates=new Set(rows.map(r=>r.date)).size;
+   return `<div class="year-total"><span>${y}年</span><b>${yen(total)}</b><small>${dates}売立日</small></div>`;
+ }).join('');
 }
 function monthTotal(y,m){const ym=`${y}${String(m).padStart(2,'0')}`;return allSales.filter(r=>r.date.startsWith(ym)).reduce((a,r)=>a+r.amount,0)}
 function customerStats(){
