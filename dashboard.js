@@ -1,6 +1,7 @@
 (()=>{
 const D=id=>document.getElementById(id);
 const yen=n=>new Intl.NumberFormat('ja-JP',{style:'currency',currency:'JPY',maximumFractionDigits:0}).format(Number(n)||0);
+const compactYen=n=>{n=Number(n)||0;return n>=10000?`¥${(n/10000).toFixed(n>=100000?1:1).replace(/\.0$/,'')}万`:`¥${Math.round(n).toLocaleString('ja-JP')}`};
 const fmtDate=s=>s&&s.length>=8?`${s.slice(0,4)}/${Number(s.slice(4,6))}/${Number(s.slice(6,8))}`:(s||'');
 const today8=()=>{const d=new Date(); return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`};
 const nrm=s=>(s||'').normalize('NFKC').replace(/[\s　]/g,'').toLowerCase();
@@ -90,7 +91,7 @@ function customerStats(){
  return [...m.values()].map(c=>({...c,purchases:c.dates.size,itemsArr:[...c.items],repeat:c.dates.size>=2}));
 }
 function renderKpis(){
- const d=new Date(),y=d.getFullYear(),m=d.getMonth()+1,cur=monthTotal(y,m); let py=y,pm=m-1;if(pm===0){pm=12;py--}const prev=monthTotal(py,pm);
+ const d=new Date(),y=d.getFullYear(),m=d.getMonth()+1,cur=monthTotal(y,m); const yearTotal=allSales.filter(r=>r.date.startsWith(String(y))).reduce((a,r)=>a+r.amount,0); D('kpiYear').textContent=yen(yearTotal); D('kpiYearSub').textContent=`${y}年1〜${m}月`; let py=y,pm=m-1;if(pm===0){pm=12;py--}const prev=monthTotal(py,pm);
  D('kpiMonth').textContent=yen(cur);D('kpiMonthSub').textContent=`${y}年${m}月`;
  if(prev>0){const pct=(cur-prev)/prev*100;D('kpiMoM').textContent=`${pct>=0?'+':''}${pct.toFixed(1)}%`}else D('kpiMoM').textContent=cur?'—':'0%';D('kpiPrev').textContent=`前月 ${yen(prev)}`;
  const yoy=monthTotal(y-1,m);if(yoy>0){const pct=(cur-yoy)/yoy*100;D('kpiYoY').textContent=`${pct>=0?'+':''}${pct.toFixed(1)}%`}else D('kpiYoY').textContent='—';D('kpiYoYSub').textContent=`前年同月 ${yen(yoy)}`;
@@ -99,14 +100,16 @@ function renderKpis(){
 function renderChart(){
  const y=D('salesYear').value;if(!y)return; const groups=['ユーカリ','コットン','グラスジェムコーン','スモークツリー','カナリヤナス','その他']; const data=[];
  for(let m=1;m<=12;m++){const obj={month:m,total:0};groups.forEach(g=>obj[g]=0);for(const r of allSales.filter(x=>x.date.startsWith(`${y}${String(m).padStart(2,'0')}`))){const g=itemGroup(r.item,r.variety);obj[g]+=r.amount;obj.total+=r.amount}data.push(obj)}
- const max=Math.max(...data.map(x=>x.total),1);D('salesChart').innerHTML=data.map(o=>`<div class="monthcol" title="${o.month}月 ${yen(o.total)}"><div class="barwrap">${groups.map(g=>o[g]?`<div class="seg" style="height:${o[g]/max*100}%;background:${COLORS[g]}" title="${g} ${yen(o[g])}"></div>`:'').join('')}</div><div class="mlabel">${o.month}月</div></div>`).join('');
+ const max=Math.max(...data.map(x=>x.total),1);D('salesChart').innerHTML=data.map(o=>`<div class="monthcol" title="${o.month}月 ${yen(o.total)}">${o.total?`<div class="barvalue">${compactYen(o.total)}</div>`:''}<div class="barwrap">${groups.map(g=>o[g]?`<div class="seg" style="height:${o[g]/max*100}%;background:${COLORS[g]}" title="${g} ${yen(o[g])}"></div>`:'').join('')}</div><div class="mlabel">${o.month}月</div></div>`).join('');
  const active=groups.filter(g=>data.some(o=>o[g]>0));D('salesLegend').innerHTML=active.map(g=>`<span><i style="background:${COLORS[g]}"></i>${g}</span>`).join('');
 }
 function renderLatest(){
  const el=D('latestSaleSummary'); if(!latestImport){const latest=allSales.reduce((a,r)=>!a||r.date>a?r.date:a,'');const amt=allSales.filter(r=>r.date===latest).reduce((a,r)=>a+r.amount,0);el.innerHTML=latest?`直近データ：<b>${fmtDate(latest)}</b><br>売上 ${yen(amt)}<br><span class="mini">次の売立CSV取込時に新規・リピーターを判定します。</span>`:'データなし';return}
- el.innerHTML=`追加売上 <b>${yen(latestImport.amount)}</b> / ${latestImport.rows}明細<br>購入者 ${latestImport.buyers}人：<span class="tag good">リピーター ${latestImport.repeats}</span> <span class="tag new">新規 ${latestImport.newBuyers}</span>${latestImport.bad.length?`<br><span class="warn">読込エラー ${latestImport.bad.length}件</span>`:''}`;
+ el.innerHTML=`追加売上 <b>${yen(latestImport.amount)}</b> / ${latestImport.rows}明細<br>購入者 ${latestImport.buyers}人：<span class="tag good">既存顧客を更新 ${latestImport.repeats}</span> <span class="tag new">新規顧客を追加 ${latestImport.newBuyers}</span><br><span class="mini">既存顧客は購入回数・累計売上・最終購入日・品目履歴を自動更新します。</span>${latestImport.bad.length?`<br><span class="warn">読込エラー ${latestImport.bad.length}件</span>`:''}`;
 }
-function sampleCandidate(c){const meta=customerMeta.get(c.buyer)||{}; if(c.purchases<3&&c.amount<20000)return false;if(!meta.sampleAt)return true;return c.last>meta.sampleAt && daysBetween(meta.sampleAt,c.last)>=90}
+function latestSampleDate(meta){const h=Array.isArray(meta.sampleHistory)?meta.sampleHistory:[]; if(h.length){const v=h[h.length-1]; return String(v).replace(/\D/g,'').slice(0,8)} return meta.sampleAt||''}
+function sampleCount(meta){const h=Array.isArray(meta.sampleHistory)?meta.sampleHistory:[]; return h.length|| (meta.sampleAt?1:0)}
+function sampleCandidate(c){const meta=customerMeta.get(c.buyer)||{}; if(c.purchases<3&&c.amount<20000)return false;const lastSample=latestSampleDate(meta);if(!lastSample)return true;return c.last>lastSample && daysBetween(lastSample,c.last)>=90}
 function daysBetween(a,b){if(!a||!b)return 999;const f=s=>Date.UTC(+s.slice(0,4),+s.slice(4,6)-1,+s.slice(6,8));return Math.round((f(b)-f(a))/86400000)}
 function renderHighlights(){
  const cs=customerStats().sort((a,b)=>b.purchases-a.purchases||b.amount-a.amount); const hot=cs.filter(sampleCandidate).slice(0,3),multi=cs.filter(c=>c.itemsArr.length>=2).slice(0,2); const list=[...new Map([...hot,...multi].map(x=>[x.buyer,x])).values()].slice(0,5);
@@ -114,11 +117,11 @@ function renderHighlights(){
 }
 function renderCustomers(){
  renderHighlights(); let cs=customerStats(); const f=D('customerFilter').value,q=D('customerSearch').value.trim(); if(q)cs=cs.filter(c=>c.buyer.includes(q)); if(f==='repeat')cs=cs.filter(c=>c.repeat);if(f==='sample')cs=cs.filter(sampleCandidate);if(f==='multi')cs=cs.filter(c=>c.itemsArr.length>=2);cs.sort((a,b)=>b.purchases-a.purchases||b.amount-a.amount);
- D('customerTable').innerHTML=cs.map(c=>{const meta=customerMeta.get(c.buyer)||{};return `<tr><td><b>${c.buyer}</b><div>${c.repeat?'<span class="tag good">リピーター</span>':'<span class="tag new">1回購入</span>'}${sampleCandidate(c)?'<span class="tag hot">サンプル候補</span>':''}</div></td><td>${c.purchases}回</td><td>${yen(c.amount)}</td><td>${c.itemsArr.map(x=>`<span class="tag">${x}</span>`).join('')}</td><td>${fmtDate(c.last)}</td><td><div class="cust-actions"><button class="light" data-act="sample" data-buyer="${c.buyer}">${meta.sampleAt?'サンプル '+fmtDate(meta.sampleAt):'サンプル済みにする'}</button><button class="light" data-act="message" data-buyer="${c.buyer}">${meta.messageAt?'メッセージ '+fmtDate(meta.messageAt):'メッセージ済みにする'}</button><button class="gray" data-act="memo" data-buyer="${c.buyer}">メモ</button></div>${meta.note?`<div class="mini">${escapeHtml(meta.note)}</div>`:''}</td></tr>`}).join('');
+ D('customerTable').innerHTML=cs.map(c=>{const meta=customerMeta.get(c.buyer)||{};const sc=sampleCount(meta), lastSample=latestSampleDate(meta);const hist=(Array.isArray(meta.sampleHistory)?meta.sampleHistory:[]).slice().reverse().slice(0,5).map(x=>fmtDate(String(x).replace(/\D/g,'').slice(0,8))).join('、');return `<tr><td><b>${c.buyer}</b><div>${c.repeat?'<span class="tag good">リピーター</span>':'<span class="tag new">1回購入</span>'}${sampleCandidate(c)?'<span class="tag hot">サンプル候補</span>':''}</div></td><td>${c.purchases}回</td><td>${yen(c.amount)}</td><td>${c.itemsArr.map(x=>`<span class="tag">${x}</span>`).join('')}</td><td>${fmtDate(c.last)}</td><td><div class="cust-actions"><button class="light sample-btn" data-act="sample" data-buyer="${c.buyer}">サンプル +1</button><button class="gray" data-act="memo" data-buyer="${c.buyer}">メモ</button></div><div class="mini sample-history">サンプル ${sc}回${lastSample?`・最終 ${fmtDate(lastSample)}`:''}${hist?`<br>履歴：${hist}${sc>5?' ほか':''}`:''}</div>${meta.note?`<div class="mini">${escapeHtml(meta.note)}</div>`:''}</td></tr>`}).join('');
  D('customerTable').querySelectorAll('button[data-act]').forEach(b=>b.addEventListener('click',()=>customerAction(b.dataset.buyer,b.dataset.act)));
 }
 function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-async function customerAction(buyer,act){const old=customerMeta.get(buyer)||{buyer}; const now=today8(); if(act==='sample')old.sampleAt=now; if(act==='message')old.messageAt=now;if(act==='memo'){const v=prompt(`${buyer} のメモ`,old.note||'');if(v===null)return;old.note=v.trim()}await putOne('customerMeta',old);customerMeta.set(buyer,old);renderCustomers()}
+async function customerAction(buyer,act){const old=customerMeta.get(buyer)||{buyer}; if(act==='sample'){if(!Array.isArray(old.sampleHistory))old.sampleHistory=old.sampleAt?[old.sampleAt]:[];const now=new Date();const stamp=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}T${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;old.sampleHistory.push(stamp);old.sampleAt=today8()}if(act==='memo'){const v=prompt(`${buyer} のメモ`,old.note||'');if(v===null)return;old.note=v.trim()}await putOne('customerMeta',old);customerMeta.set(buyer,old);renderCustomers()}
 function renderHistory(){
  const rows=[...allSales].sort((a,b)=>b.date.localeCompare(a.date)||b.amount-a.amount);D('salesHistory').innerHTML=rows.map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${escapeHtml(r.saleType)}</td><td>${itemGroup(r.item,r.variety)}</td><td>${escapeHtml(r.variety)}</td><td>${escapeHtml(r.length)}</td><td>${r.qty}</td><td>${yen(r.unitPrice)}</td><td>${yen(r.amount)}</td><td>${escapeHtml(r.buyer)}</td></tr>`).join('');
 }
