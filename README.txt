@@ -71,3 +71,12 @@ v6.9.6 stability fix
 - Tokyo market / import fetch failures are treated as auxiliary-source limitations, not forecast-engine failures.
 - Calendar continues using cached or neutral/seasonal fallback data when browser CORS blocks public sites.
 - PWA cache bumped to v696.
+
+
+v6.9.7 detail click + holiday display fix
+- Forecast detail rendering is now fault-tolerant.
+- Main forecast breakdown always renders first; external-market comments are optional.
+- Calendar click uses event delegation and survives calendar redraws.
+- showForecastDetail is exposed globally as a second safety path.
+- Saturday/Sunday/holiday no longer paint the whole cell.
+- Only the date number is blue (Saturday) or red (Sunday/holiday), preserving forecast heat colors.

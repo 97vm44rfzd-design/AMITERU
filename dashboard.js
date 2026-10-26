@@ -563,18 +563,22 @@ function renderForecastCalendars(){
   return `<div class="forecast-cal"><div class="cal-head"><b>${y}年${m+1}月</b><span class="small">火・木・日セリ</span></div><div class="cal-week">${['日','月','火','水','木','金','土'].map((x,i)=>`<div class="${i===0?'sun-head':i===6?'sat-head':''}">${x}</div>`).join('')}</div><div class="cal-days">${cells}</div></div>`;
  }).join('');
 
- // セリ日のクリック/キーボード操作は既存の詳細表示関数へ一本化
- root.querySelectorAll('.daycell[data-auction="1"]').forEach(el=>{
-  const open=()=>{
-   const k=el.dataset.date;
-   const d=new Date(+k.slice(0,4),+k.slice(4,6)-1,+k.slice(6,8));
-   showForecastDetail(d);
-   const detail=D('forecastDetail');
-   if(detail)detail.scrollIntoView({behavior:'smooth',block:'nearest'});
-  };
-  el.addEventListener('click',open);
-  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}});
- });
+ // セリ日のクリック/キーボード操作。再描画後も効くイベント委譲。
+ if(!root.dataset.detailBound){
+  root.dataset.detailBound='1';
+  root.addEventListener('click',e=>{
+   const el=e.target.closest('.daycell[data-auction="1"]'); if(!el)return;
+   const k=el.dataset.date; if(!k||k.length<8)return;
+   showForecastDetail(new Date(+k.slice(0,4),+k.slice(4,6)-1,+k.slice(6,8)));
+  });
+  root.addEventListener('keydown',e=>{
+   if(e.key!=='Enter'&&e.key!==' ')return;
+   const el=e.target.closest('.daycell[data-auction="1"]'); if(!el)return;
+   e.preventDefault();
+   const k=el.dataset.date; if(!k||k.length<8)return;
+   showForecastDetail(new Date(+k.slice(0,4),+k.slice(4,6)-1,+k.slice(6,8)));
+  });
+ }
 
  const st=D('forecastAutoStatus');
  if(st){
@@ -591,15 +595,66 @@ function renderForecastCalendars(){
   if(ms)ms.innerHTML='<div class="source-alert warn"><b>他市場の直近市況</b><span>外部市況欄の表示に失敗しましたが、需要予測カレンダーは通常どおり利用できます。</span></div>';
  }
 }
-function showForecastDetail(d){
- const fc=forecastFor(d);
- D('forecastDetail').innerHTML=`<div class="sectionhead"><div><div class="section-kicker">Auction forecast</div><h3 style="margin:0">${d.getMonth()+1}/${d.getDate()} ${['日','月','火','水','木','金','土'][d.getDay()]}曜セリ　総合 <b>${fc.score}/100</b></h3></div><span class="tag ${fc.level>=4?'hot':'good'}">${fc.level>=5?'かなり強い':fc.level===4?'強い':fc.level===3?'普通':fc.level===2?'やや弱い':'弱い'}</span></div>
- <div class="forecast-splits"><div class="forecast-split"><span>予測幅</span><b>${fc.range[0]}–${fc.range[1]}</b><small>信頼度 ${fc.confidence}%</small></div><div class="forecast-split"><span>単純予測</span><b>${fc.baseline}</b><small>複合予測との差 ${fc.score-fc.baseline>=0?'+':''}${fc.score-fc.baseline}</small></div><div class="forecast-split"><span>ブライダル</span><b>${fc.bridalIndex}</b><small>短尺寄り</small></div><div class="forecast-split"><span>小売り</span><b>${fc.retailIndex}</b><small>週末天気を自動反映</small></div><div class="forecast-split"><span>40cm</span><b>${fc.lengthScores[40]}</b><small>${fc.lengthDetails[40].evt.label}</small></div><div class="forecast-split"><span>50cm</span><b>${fc.lengthScores[50]}</b><small>${fc.lengthDetails[50].evt.label}</small></div><div class="forecast-split"><span>60cm</span><b>${fc.lengthScores[60]}</b><small>${fc.lengthDetails[60].evt.label}</small></div><div class="forecast-split"><span>70cm</span><b>${fc.lengthScores[70]}</b><small>${fc.lengthDetails[70].evt.label}</small></div></div>
- <div class="factor-list"><div class="factor"><span>過去実績（CSV学習）</span><strong>+${fc.h.score}</strong></div><div class="factor"><span>物日需要</span><strong>+${fc.ev.score}</strong></div><div class="factor"><span>婚礼需要推定</span><strong>+${fc.b.score}</strong></div><div class="factor"><span>小売り需要</span><strong>+${fc.r.score}</strong></div><div class="factor"><span>週末天気</span><strong>${fc.r.weather.score>=0?'+':''}${fc.r.weather.score}</strong></div><div class="factor"><span>${fc.w.label}</span><strong>+${fc.w.score}</strong></div><div class="factor"><span>${fc.s.label}</span><strong>+${fc.s.score}</strong></div><div class="factor"><span>外部ユーカリ市況</span><strong>${fc.o.score>=0?'+':''}${fc.o.score}</strong></div><div class="factor"><span>海外供給（輸入）</span><strong>${fc.imp.score>=0?'+':''}${fc.imp.score}</strong></div><div class="factor"><span>連休補正</span><strong>${fc.hp}</strong></div><div class="factor"><span>${fc.settle.label}</span><strong>${fc.settle.score>=0?'+':''}${fc.settle.score}</strong></div><div class="factor"><span>実績誤差の学習補正</span><strong>${fc.learnBias>=0?'+':''}${fc.learnBias}</strong></div></div>
- <div class="small" style="margin-top:9px">過去：${fc.h.label} ／ 物日：${fc.ev.label} ／ 婚礼：${fc.b.label}（${fc.b.mode}） ／ 天気：${fc.r.weather.label} ／ 他市場：${fc.o.label} ／ 輸入：${fc.imp.label} ／ 締め日：${fc.settle.label}</div>
- ${(()=>{const mc=combinedMarketComment();return mc?.comment?`<div class="market-comment ${mc.tone||'neutral'}"><b>市況コメント</b><span>${mc.comment}</span>${mc.yoyPrice!=null||mc.yoyQty!=null?`<small>前年同月比：${mc.yoyPrice!=null?`価格 ${mc.yoyPrice>=0?'+':''}${Math.round(mc.yoyPrice*100)}%`:''}${mc.yoyPrice!=null&&mc.yoyQty!=null?' ／ ':''}${mc.yoyQty!=null?`数量 ${mc.yoyQty>=0?'+':''}${Math.round(mc.yoyQty*100)}%`:''}</small>`:''}${mc.producerWeather?`<small>産地天気補正：${mc.producerWeather.label}</small>`:''}${mc.importSupply?`<small>海外供給：${mc.importSupply.label}</small>`:''}</div>`:''})()}
- <div class="forecast-note" style="margin-top:8px">入力不要。予測幅と信頼度を表示し、単純予測（過去実績＋曜日＋季節＋物日）とも常時比較します。CSV取込時には予測と実績の誤差を記録し、同じ方向のズレが続いた時だけ最大±6点まで緩やかに補正します。極端な単価は学習時の重みを下げます。小売りは関東7都県の週末天気を自動反映。母の日・卒園/卒業・入園/入学・父の日・敬老の日・クリスマス・送別会・離任式は直前の火木日セリへ物日需要として前倒し加点します。長さは40/50/60/70cmを別々に予測し、母の日はアレンジ用途で40〜50cm、卒園・卒業は予算を抑えた花束・アレンジ需要で40〜50cmを強めに評価。送別会・離任式は50〜60cm、クリスマスは50〜60cmまで広めに評価します。売立CSVを追加するたび、同時期・同じセリ曜日の長さ別実績も自動学習して補正します。ブライダルは週末の曜日・六曜・婚礼シーズンから需要指数を推定します。曜日参加度は実運用に合わせて日曜＞木曜＞火曜を初期値とし、売立CSVの曜日別平均単価・買参数・特販率が3セリ日以上たまると最大±5点で自動補正します。天気予報がまだ出ていない先の日付は中立扱いです。外部市況は東京都中央卸売市場の花き日報からユーカリを自動抽出し、価格・数量の直近変化を補助シグナルとして使います。露地ユーカリの供給量は天候に左右されるため、茨城・千葉はセリ1〜2日前、静岡・長野・愛媛は2〜3日前の雨・強風を自動取得し、数量減が需要増なのか採花・出荷減なのかを補正してコメントします。輸入は植物防疫所・財務省貿易統計を海外供給の補助シグナルとして監視し、取れる場合は前年差を最大±6点で反映します。ユーカリ単独の数量を安定抽出できない場合は推定値を作らず0点（中立）とし、その旨を警告します。買参人の15日締め・月末締めについては、直前セリを−4点、2回前を−2点の軽い買い控え補正から開始し、売立CSVの答え合わせが3回以上たまった段階で最大±2点だけ自動調整します。取得失敗・更新停止・形式変更を検知した場合は画面上に警告します。</div>`;
+function signed(v){
+ const n=Number(v)||0; return `${n>0?'+':''}${n}`;
 }
+function safeText(v,fallback='—'){return v==null||v===''?fallback:String(v)}
+function showForecastDetail(d){
+ const target=D('forecastDetail'); if(!target)return;
+ try{
+  const fc=forecastFor(d);
+  const dow=['日','月','火','水','木','金','土'][d.getDay()];
+  const factors=[
+   ['過去実績（CSV学習）', fc.h?.score, fc.h?.label],
+   ['曜日参加度', fc.w?.score, fc.w?.label],
+   ['物日需要', fc.ev?.score, fc.ev?.label],
+   ['婚礼需要', fc.b?.score, fc.b?.label],
+   ['小売り需要', fc.r?.score, fc.r?.label],
+   ['週末天気', fc.r?.weather?.score, fc.r?.weather?.label],
+   ['季節', fc.s?.score, fc.s?.label],
+   ['外部ユーカリ市況', fc.o?.score, fc.o?.label],
+   ['海外供給（輸入）', fc.imp?.score, fc.imp?.label],
+   ['連休補正', fc.hp, '連休前後'],
+   ['締め日前補正', fc.settle?.score, fc.settle?.label],
+   ['実績誤差の学習補正', fc.learnBias, '予測と実績の継続誤差']
+  ];
+  const lengthHtml=[40,50,60,70].map(cm=>{
+   const ld=fc.lengthDetails?.[cm]||{}, evt=ld.evt||{}, hist=ld.hist||{};
+   return `<div class="forecast-split"><span>${cm}cm</span><b>${safeText(fc.lengthScores?.[cm])}</b><small>${hesc(evt.label||hist.label||'')}</small></div>`;
+  }).join('');
+  const factorHtml=factors.map(([name,val,label])=>`<div class="factor"><span>${hesc(name)}${label?`<small style="display:block;color:var(--muted);margin-top:2px">${hesc(label)}</small>`:''}</span><strong>${signed(val)}</strong></div>`).join('');
+
+  target.innerHTML=`
+   <div class="sectionhead">
+    <div><div class="section-kicker">All-Seeing Eye detail</div><h3 style="margin:0">${d.getMonth()+1}/${d.getDate()} ${dow}曜セリ　総合 <b>${fc.score}/100</b></h3></div>
+    <span class="tag ${fc.level>=4?'hot':'good'}">${fc.level>=5?'かなり強い':fc.level===4?'強い':fc.level===3?'普通':fc.level===2?'やや弱い':'弱い'}</span>
+   </div>
+   <div class="forecast-splits">
+    <div class="forecast-split"><span>予測幅</span><b>${fc.range?.[0]??'—'}–${fc.range?.[1]??'—'}</b><small>信頼度 ${fc.confidence??'—'}%</small></div>
+    <div class="forecast-split"><span>単純予測</span><b>${fc.baseline??'—'}</b><small>複合差 ${signed((fc.score||0)-(fc.baseline||0))}</small></div>
+    <div class="forecast-split"><span>ブライダル</span><b>${fc.bridalIndex??'—'}</b><small>${hesc(fc.b?.mode||'')}</small></div>
+    <div class="forecast-split"><span>小売り</span><b>${fc.retailIndex??'—'}</b><small>週末天気反映</small></div>
+    ${lengthHtml}
+   </div>
+   <div class="factor-list">${factorHtml}</div>
+   <div id="forecastDetailMarket" class="small" style="margin-top:10px"></div>
+  `;
+  target.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  // 市況コメントは補助表示。失敗しても上の内訳は残す。
+  try{
+   const mc=combinedMarketComment();
+   const aux=D('forecastDetailMarket');
+   if(aux && mc?.comment){
+    aux.innerHTML=`<div class="market-comment ${hesc(mc.tone||'neutral')}"><b>市況コメント</b><span>${hesc(mc.comment)}</span></div>`;
+   }
+  }catch(e){console.warn('detail market comment',e)}
+ }catch(e){
+  console.error('forecast detail',e);
+  target.innerHTML=`<div class="source-alert danger"><b>この日の内訳表示でエラー</b><span>${hesc(e?.message||e||'不明なエラー')}</span></div>`;
+ }
+}
+window.showForecastDetail=showForecastDetail;
 async function fetchAutoWeather(){
  const settled=await Promise.allSettled(KANTO_WEATHER_POINTS.map(async p=>{
   const url=`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&daily=weather_code,precipitation_probability_max&timezone=Asia%2FTokyo&forecast_days=16`;

@@ -43,9 +43,6 @@ details{border-top:1px solid var(--line);padding-top:14px}summary{cursor:pointer
 .market-comment{margin-top:10px;padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:#f6f8f6;font-size:12px;line-height:1.55}.market-comment b,.market-comment span,.market-comment small{display:block}.market-comment span{margin-top:2px}.market-comment small{margin-top:5px;color:var(--muted)}.market-comment.tight,.market-comment.strong{background:#eef6f0;border-color:#cbded0}.market-comment.glut,.market-comment.weak{background:#fff3ef;border-color:#e8c6bb}
 .tool-icon{display:inline-grid;place-items:center;width:30px;height:30px;border:1px solid #cfb46d;border-radius:9px;background:#fbf6ea;color:#9a742b;font-size:17px;font-weight:900}.harvest-table{width:100%;border-collapse:collapse;margin-top:10px}.harvest-table th,.harvest-table td{padding:8px;border-bottom:1px solid var(--line);text-align:left}.harvest-table input{min-width:70px}.egypt-note{border-left:3px solid #b68a36;background:#fbf6ea;padding:11px 13px;border-radius:10px}.harvest-preview{max-width:340px;width:100%;border-radius:12px;border:1px solid var(--line);display:none;margin-top:10px}
 
-.daycell.sat{background:#eef5fb;border-color:#d7e5f1}
-.daycell.sun{background:#fff1f1;border-color:#efdada}
-.daycell.holiday{background:#fff0f0;border-color:#edcccc}
 .daycell.sat .daynum,.sat-head{color:#356b9a}
 .daycell.sun .daynum,.daycell.holiday .daynum,.sun-head{color:#b34b4b}
 .daycell.auction{cursor:pointer;box-shadow:inset 0 0 0 1px rgba(36,79,59,.04)}
@@ -103,7 +100,7 @@ details{border-top:1px solid var(--line);padding-top:14px}summary{cursor:pointer
     <h1>AMITERU FLOW</h1>
     <div class="brand-sub">販売・顧客・出荷を、ひとつの流れで。</div>
   </div>
-  <div class="top-actions"><span class="badge">v6.9.6</span><span class="state" id="state">Sales & customer intelligence</span></div>
+  <div class="top-actions"><span class="badge">v6.9.7</span><span class="state" id="state">Sales & customer intelligence</span></div>
 </header>
 <nav class="nav" aria-label="ページ内ナビゲーション">
   <a href="#salesDashboard">Dashboard</a><a href="#harvestScan">Harvest Scan</a><a href="#eucaForecast">𓂀 All-Seeing Eye</a><a href="#customersArea">Customers</a><a href="#imageLibrary">Images</a><a href="#shippingTools">Shipping</a><a href="#mailTools">Mail</a>
@@ -153,7 +150,7 @@ details{border-top:1px solid var(--line);padding-top:14px}summary{cursor:pointer
 <div id="forecastAutoStatus" class="small" style="margin:-2px 0 8px;color:var(--muted)">自動データを更新中…</div><div id="forecastHealth" class="forecast-health"></div><div id="forecastCalendars" class="forecast-grid"></div>
 <div id="otherMarketSummary" class="other-market-summary"></div>
 <div class="forecast-legend"><span>弱い</span><i class="heatbox heat1"></i><i class="heatbox heat2"></i><i class="heatbox heat3"></i><i class="heatbox heat4"></i><i class="heatbox heat5"></i><span>強い</span><span>・ 予測はユーカリ専用</span></div>
-<div id="forecastDetail" class="forecast-detail"><div class="small">色付きのセリ日をタップすると、その日の需要スコア・天気・物日・市況・締め日・サイズ別予測の内訳を表示します。土曜は青、日曜・祝日は赤系です。</div></div>
+<div id="forecastDetail" class="forecast-detail"><div class="small">色付きのセリ日をタップすると、その日の需要スコア・天気・物日・市況・締め日・サイズ別予測の内訳を表示します。土曜は日付数字だけ青、日曜・祝日は日付数字だけ赤です。需要予測のセル色はそのまま表示します。</div></div>
 </section>
 
 <section class="card anchor-spacer" id="imageLibrary">
@@ -224,10 +221,10 @@ details{border-top:1px solid var(--line);padding-top:14px}summary{cursor:pointer
 
 <button id="backTop" class="backtop" type="button" aria-label="ページ上部へ戻る" title="上へ戻る">↑</button>
 <canvas id="cv" hidden></canvas>
-<script src="sales_seed.js?v=696"></script>
-<script src="dashboard.js?v=696"></script>
-<script src="harvest.js?v=696"></script>
-<script src="app.js?v=696"></script>
+<script src="sales_seed.js?v=697"></script>
+<script src="dashboard.js?v=697"></script>
+<script src="harvest.js?v=697"></script>
+<script src="app.js?v=697"></script>
 <script>
 (()=>{const b=document.getElementById("backTop");if(!b)return;b.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));const toggle=()=>{b.style.display=window.scrollY>500?"grid":"none"};window.addEventListener("scroll",toggle,{passive:true});toggle();})();
 </script>
