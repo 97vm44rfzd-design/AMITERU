@@ -44,3 +44,21 @@ v6.9.3 weekday participation calibration
 - Sunday bridal multiplier relaxed from 0.30 to 0.78.
 - Sunday event multiplier relaxed from 0.45 to 0.88.
 - Length-history weekday matching uses corrected auction date consistently.
+
+
+v6.9.4 click + calendar color fix
+- Fixed forecast-date click: removed broken alternate detail renderer using undefined forecastDay().
+- Auction-day click now always calls the existing showForecastDetail().
+- Keyboard Enter/Space also opens details.
+- Saturday cells are blue.
+- Sunday and Japanese holiday cells are red/pink.
+- Holiday fallback dates are colored even when the external holiday-name API is unavailable.
+- PWA cache bumped to v694.
+
+
+v6.9.5 other-market summary
+- Added a persistent "他市場の直近市況" card directly below the forecast calendars.
+- Shows Ota Market latest recognized date/update status.
+- Shows recent price/quantity, prior-period change, year-over-year price/quantity.
+- Shows market comment, producer-weather signal, import-supply signal, and All-Seeing Eye market correction.
+- The card refreshes whenever the forecast calendar is redrawn.

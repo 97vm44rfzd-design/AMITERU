@@ -487,17 +487,104 @@ function forecastFor(d){
  const baseline=baselineForecast(d),confidence=forecastConfidence(d,{h,r,ev}),range=forecastRange(score,confidence);return {score,h,b,r,s,w,o,imp,hp,ev,settle,bridalIndex,retailIndex,shortIndex,longIndex,lengthScores,lengthDetails,baseline,confidence,range,learnBias,level:score>=78?5:score>=64?4:score>=49?3:score>=34?2:1};
 }
 function weatherBadgeForDate(d){const r=fcAuto.weather?.[isoKey(d)];return r?`${weatherLabel(r.kind)}${r.pop?` ${r.pop}%`:''}`:''}
+
+function renderOtherMarketSummary(){
+ const el=D('otherMarketSummary'); if(!el)return;
+ const m=fcAuto.market||{}, combined=combinedMarketComment?.()||null;
+ const imp=importSupplyFactor();
+ const status=fcAuto.marketStatus||'未取得';
+ const updated=fcAuto.marketUpdatedAt?new Date(fcAuto.marketUpdatedAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'未更新';
+ const last=m.lastDate||fcAuto.marketLastDate||'';
+ const lastLabel=last?last.slice(5).replace('-','/'):'—';
+ const pct=v=>v==null?'—':`${v>=0?'+':''}${Math.round(v*100)}%`;
+ const yen=v=>v?`${Math.round(v).toLocaleString('ja-JP')}円/本`:'—';
+ const qty=v=>v?`${Math.round(v).toLocaleString('ja-JP')}`:'—';
+ let tone=(combined&&combined.tone)||m.tone||'neutral';
+ let headline='外部市況を取得中です。';
+ if(status==='取得済'){
+   headline=(combined&&combined.comment)||m.comment||'直近市況を取得しました。';
+ }else if(status==='キャッシュ'){
+   headline='前回取得した市況データを表示しています。';
+ }else if(status==='形式変更'){
+   headline='外部市況データの形式変更を検知しました。';
+ }else if(status==='取得失敗'){
+   headline='外部市況を取得できないため、予測では季節平均を併用しています。';
+ }
+ const producer=(combined&&combined.producerWeather)||producerWeatherContext(last||null);
+ el.innerHTML=`
+  <div class="market-summary-card ${tone}">
+   <div class="market-summary-head">
+    <div>
+     <div class="section-kicker">Nearby market pulse</div>
+     <h3>他市場の直近市況</h3>
+    </div>
+    <span class="market-status">${esc(status)}</span>
+   </div>
+   <div class="market-source-row">
+    <b>大田市場・ユーカリ</b>
+    <span>最終認識 ${esc(lastLabel)} ／ 更新 ${esc(updated)}</span>
+   </div>
+   <div class="market-metrics">
+    <div><span>直近価格</span><b>${yen(m.price)}</b><small>前期間比 ${pct(m.priceChange)}</small></div>
+    <div><span>直近数量</span><b>${qty(m.qty)}</b><small>前期間比 ${pct(m.qtyChange)}</small></div>
+    <div><span>前年同月・価格</span><b>${pct(m.yoyPrice)}</b><small>${m.yoyPrice==null?'比較データ蓄積中':'前年同月との差'}</small></div>
+    <div><span>前年同月・数量</span><b>${pct(m.yoyQty)}</b><small>${m.yoyQty==null?'比較データ蓄積中':'前年同月との差'}</small></div>
+   </div>
+   <div class="market-summary-comment"><b>市況判断</b><span>${esc(headline)}</span></div>
+   <div class="market-signals">
+    <span>産地天気：${esc(producer?.label||'データなし')}</span>
+    <span>海外供給：${esc(imp?.label||'データなし')}</span>
+    <span>All-Seeing Eye補正：${Number.isFinite(combined?.score)?`${combined.score>=0?'+':''}${Math.round(combined.score)}点`:(Number.isFinite(m.score)?`${m.score>=0?'+':''}${Math.round(m.score)}点`:'—')}</span>
+   </div>
+  </div>`;
+}
+
 function renderForecastCalendars(){
  const root=D('forecastCalendars');if(!root)return;
- root.addEventListener('click',e=>{
-   const cell=e.target.closest('[data-date]');
-   if(cell&&cell.dataset.date) openForecastDetail(cell.dataset.date);
- });const now=new Date();
- root.innerHTML=[0,1].map(off=>{const first=new Date(now.getFullYear(),now.getMonth()+off,1),y=first.getFullYear(),m=first.getMonth(),days=new Date(y,m+1,0).getDate(),blanks=first.getDay();let cells='';for(let i=0;i<blanks;i++)cells+='<div class="daycell empty"></div>';
-  for(let n=1;n<=days;n++){const d=new Date(y,m,n),auction=isAuctionDay(d),weekend=[0,6].includes(d.getDay()),r=lunarRokuyo(d),fc=auction?forecastFor(d):null,wb=weekend?weatherBadgeForDate(d):'',hn=holidayName(d);cells+=`<div class="daycell ${auction?`auction heat${fc.level}`:''} ${weekend?'weekend':''}" data-date="${dateKey(d)}" data-auction="${auction?1:0}"><div class="daynum">${n}${hn?'<span class="holiday-dot">●</span>':''}</div><div class="rokuyo">${r||''}${hn?`・${hn}`:''}</div>${auction?`<div class="auction-label">${['日','月','火','水','木','金','土'][d.getDay()]}曜セリ</div><div class="heat-score">${fc.score}</div>`:''}${weekend&&wb?`<span class="weather-badge">${wb}</span>`:''}</div>`}
-  return `<div class="forecast-cal"><div class="cal-head"><b>${y}年${m+1}月</b><span class="small">火・木・日セリ</span></div><div class="cal-week">${['日','月','火','水','木','金','土'].map(x=>`<div>${x}</div>`).join('')}</div><div class="cal-days">${cells}</div></div>`}).join('');
- root.querySelectorAll('.daycell[data-auction="1"]').forEach(el=>el.addEventListener('click',()=>{const k=el.dataset.date,d=new Date(+k.slice(0,4),+k.slice(4,6)-1,+k.slice(6,8));showForecastDetail(d)}));
- const st=D('forecastAutoStatus');if(st){const wu=fcAuto.weatherThrough?`天気〜${fcAuto.weatherThrough.slice(5).replace('-','/')}`:'天気未取得';const up=fcAuto.updatedAt?new Date(fcAuto.updatedAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'未更新';const mu=fcAuto.marketUpdatedAt?new Date(fcAuto.marketUpdatedAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'未更新';const iu=fcAuto.importUpdatedAt?new Date(fcAuto.importUpdatedAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'未更新';st.textContent=`自動取得：関東7都県 ${wu}／主要産地天気 ${fcAuto.producerWeatherStatus}${fcAuto.producerWeatherCoverage?` ${fcAuto.producerWeatherCoverage}`:''}／祝日 ${fcAuto.holidayStatus}／大田市場 ${fcAuto.marketStatus}（${mu}）／輸入 ${fcAuto.importStatus}（${iu}）／全体更新 ${up}${fcAuto.weatherCoverage?`／${fcAuto.weatherCoverage}`:''}`;}renderForecastHealth();
+ const now=new Date();
+ root.innerHTML=[0,1].map(off=>{
+  const first=new Date(now.getFullYear(),now.getMonth()+off,1),y=first.getFullYear(),m=first.getMonth(),days=new Date(y,m+1,0).getDate(),blanks=first.getDay();
+  let cells='';
+  for(let i=0;i<blanks;i++)cells+='<div class="daycell empty"></div>';
+  for(let n=1;n<=days;n++){
+   const d=new Date(y,m,n),dow=d.getDay(),auction=isAuctionDay(d),isSat=dow===6,isSun=dow===0;
+   const hset=holidaySet(y),isHoliday=hset.has(dateKey(d)),r=lunarRokuyo(d),fc=auction?forecastFor(d):null;
+   const wb=(isSat||isSun)?weatherBadgeForDate(d):'',hn=holidayName(d);
+   const dayClass=isHoliday?'holiday':isSun?'sun':isSat?'sat':'';
+   const holidayText=hn|| (isHoliday?'祝日':'');
+   cells+=`<div class="daycell ${auction?`auction heat${fc.level}`:''} ${dayClass}" data-date="${dateKey(d)}" data-auction="${auction?1:0}" ${auction?'role="button" tabindex="0" aria-label="'+(m+1)+'月'+n+'日 '+['日','月','火','水','木','金','土'][dow]+'曜セリ 需要予測 '+fc.score+'点"':''}>
+    <div class="daynum">${n}${isHoliday?'<span class="holiday-dot">●</span>':''}</div>
+    <div class="rokuyo">${r||''}${holidayText?`・${holidayText}`:''}</div>
+    ${auction?`<div class="auction-label">${['日','月','火','水','木','金','土'][dow]}曜セリ</div><div class="heat-score">${fc.score}</div>`:''}
+    ${(isSat||isSun)&&wb?`<span class="weather-badge">${wb}</span>`:''}
+   </div>`;
+  }
+  return `<div class="forecast-cal"><div class="cal-head"><b>${y}年${m+1}月</b><span class="small">火・木・日セリ</span></div><div class="cal-week">${['日','月','火','水','木','金','土'].map((x,i)=>`<div class="${i===0?'sun-head':i===6?'sat-head':''}">${x}</div>`).join('')}</div><div class="cal-days">${cells}</div></div>`;
+ }).join('');
+
+ // セリ日のクリック/キーボード操作は既存の詳細表示関数へ一本化
+ root.querySelectorAll('.daycell[data-auction="1"]').forEach(el=>{
+  const open=()=>{
+   const k=el.dataset.date;
+   const d=new Date(+k.slice(0,4),+k.slice(4,6)-1,+k.slice(6,8));
+   showForecastDetail(d);
+   const detail=D('forecastDetail');
+   if(detail)detail.scrollIntoView({behavior:'smooth',block:'nearest'});
+  };
+  el.addEventListener('click',open);
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}});
+ });
+
+ const st=D('forecastAutoStatus');
+ if(st){
+  const wu=fcAuto.weatherThrough?`天気〜${fcAuto.weatherThrough.slice(5).replace('-','/')}`:'天気未取得';
+  const up=fcAuto.updatedAt?new Date(fcAuto.updatedAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'未更新';
+  const mu=fcAuto.marketUpdatedAt?new Date(fcAuto.marketUpdatedAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'未更新';
+  const iu=fcAuto.importUpdatedAt?new Date(fcAuto.importUpdatedAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'未更新';
+  st.textContent=`自動取得：関東7都県 ${wu}／主要産地天気 ${fcAuto.producerWeatherStatus}${fcAuto.producerWeatherCoverage?` ${fcAuto.producerWeatherCoverage}`:''}／祝日 ${fcAuto.holidayStatus}／大田市場 ${fcAuto.marketStatus}（${mu}）／輸入 ${fcAuto.importStatus}（${iu}）／全体更新 ${up}${fcAuto.weatherCoverage?`／${fcAuto.weatherCoverage}`:''}`;
+ }
+ renderForecastHealth();
+ renderOtherMarketSummary();
 }
 function showForecastDetail(d){
  const fc=forecastFor(d);
@@ -577,55 +664,6 @@ async function refreshForecastExternal(force=false){
  fcAutoSave();renderForecastCalendars();
 }
 
-function forecastDetailHtml(d){
- const p=forecastDay(d);
- const rows=[
-  ['基本点',10,'基礎'],
-  ['祝日・連休',p.holiday?.score||0,p.holiday?.label||''],
-  ['婚礼需要',p.bridal?.score||0,p.bridal?.label||''],
-  ['関東天気',Math.round((p.regionWeather?.score||0)*.55),p.regionWeather?.label||''],
-  ['産地天気',Math.round((p.producerWeather?.score||0)*.45),p.producerWeather?.label||''],
-  ['他市場',p.market?.score||0,p.market?.label||''],
-  ['輸入動向',p.imports?.score||0,p.imports?.label||''],
-  ['物日・イベント',p.event?.score||0,p.event?.label||''],
-  ['締め日前補正',p.settlement?.score||0,p.settlement?.label||''],
-  ['過去実績学習',p.learningBias||0,p.learningLabel||'']
- ];
- const scoreCls=v=>v>0?'good':v<0?'bad':'flat';
- const len=(p.lengthForecasts||[]).map(x=>`
-   <div class="fd-len">
-    <div><b>${esc(String(x.length||''))}cm</b><span>${esc(x.label||'')}</span></div>
-    <strong>${esc(String(x.score??''))}</strong>
-   </div>`).join('');
- return `
-  <div class="forecast-detail-card">
-   <div class="fd-head">
-    <div>
-     <div class="section-kicker">All-Seeing Eye detail</div>
-     <h3>${d.getMonth()+1}月${d.getDate()}日の予測内訳</h3>
-    </div>
-    <div class="fd-score">${p.score}<small>/100</small></div>
-   </div>
-   <div class="fd-summary">${esc(p.label||'')}</div>
-   <div class="fd-grid">
-    ${rows.map(r=>`<div class="fd-row"><span>${r[0]}</span><b class="${scoreCls(r[1])}">${r[1]>0?'+':''}${r[1]}</b><small>${esc(r[2]||'')}</small></div>`).join('')}
-   </div>
-   <div class="fd-subtitle">長さ別予測</div>
-   <div class="fd-lengths">${len||'<div class="small">長さ別データなし</div>'}</div>
-   <div class="fd-meta small">${esc(p.reason||'')}</div>
-  </div>`;
-}
-
-function openForecastDetail(dateStr){
- const el=D('forecastDetail');
- if(!el)return;
- const d=parseDateKey(dateStr);
- if(!d)return;
- el.innerHTML=forecastDetailHtml(d);
- el.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-window.openForecastDetail=openForecastDetail;
 function initForecast(){
  const root=D('forecastCalendars');if(!root)return;
  try{
